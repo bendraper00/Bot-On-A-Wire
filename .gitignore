@@ -5,7 +5,7 @@
 !/tensorflow1/models/research
 /tensorflow1/models/research/*
 !/tensorflow1/models/research/object_detection
-/tensorflow1/models/research/object_detection/images/test*
-/tensorflow1/models/research/object_detection/images/training*
-/tensorflow1/models/research/object_detection/images/toBeSorted*
-/tensorflow1/models/research/object_detection/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8*
+/tensorflow1/models/research/object_detection/images/test**
+/tensorflow1/models/research/object_detection/images/training**
+/tensorflow1/models/research/object_detection/images/toBeSorted**
+/tensorflow1/models/research/object_detection/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8**
