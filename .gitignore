@@ -1,12 +1,8 @@
 # exclude everything except directory /tensoflow1/models/ #research/object_detection
 /tensorflow1/*
 !/tensorflow1/models
-/tensorflow1/models/
-!/tensorflow1/models/research
+/tensorflow1/models/*
 
-!/tensorflow1/models/research/object_detection
-!/tensorflow1/models/research/slim
-!/tensorflow1/models/research/setup.py
 *.jpg
 *.xml
 *.mp4
