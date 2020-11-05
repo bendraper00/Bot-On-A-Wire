@@ -2,7 +2,7 @@
 /tensorflow1/*
 !/tensorflow1/models
 /tensorflow1/models/*
-!/tensorflow1/models/setup.py
+/tensorflow1/models/!setup.py
 !/tensorflow1/models/research
 /tensorflow1/models/research/*
 !/tensorflow1/models/research/object_detection
