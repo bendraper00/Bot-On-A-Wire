@@ -20,7 +20,11 @@ import numpy as np
 import sys
 import importlib.util
 
-
+def get_output_tensor(interpreter, index):
+  """Returns the output tensor at the given index."""
+  output_details = interpreter.get_output_details()[index]
+  tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
+  return tensor
 
 # Define and parse input arguments
 parser = argparse.ArgumentParser()
@@ -134,13 +138,17 @@ while(video.isOpened()):
     interpreter.invoke()
 
     # Retrieve detection results
-    boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
-    classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
-    scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
+    #boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
+    #classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
+    #scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
     #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-
+    boxes = get_output_tensor(interpreter, 0)
+    classes = get_output_tensor(interpreter, 1)
+    scores = get_output_tensor(interpreter, 2)
+    count = int(get_output_tensor(interpreter, 3))
     # Loop over all detections and draw detection box if confidence is above minimum threshold
-    for i in range(len(scores)):
+    print(scores)
+    for i in range(count):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
             # Get bounding box coordinates and draw box
