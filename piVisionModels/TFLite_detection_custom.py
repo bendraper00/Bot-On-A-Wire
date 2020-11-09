@@ -106,7 +106,7 @@ def annotate_objects(annotator, results, labels):
 
     # Draw label
     object_name = labels[obj['class_id']] # Look up object name from "labels" array using class index
-    label = '%s: %d%%' % (object_name, obj['score']) # Example: 'person: 72%'
+    label = '%s: %.2f' % (object_name, obj['score']) # Example: 'person: 72%'
     labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
     label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
     cv2.rectangle(annotator, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
@@ -193,7 +193,7 @@ def main():
         #annotate_objects(annotator, results, labels)
         #annotator.update()
         annotate_objects(frame, results, labels)
-        print(results)
+        #print(results)
         cv2.imshow('Object detector', frame)
         if cv2.waitKey(1) == ord('q'):
             break
