@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-r"""Exports TF2 detection SavedModel for conversion to TensorFlow Lite.
+"""Exports TF2 detection SavedModel for conversion to TensorFlow Lite.
 
 Link to the TF2 Detection Zoo:
 https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md
@@ -77,7 +77,8 @@ from absl import flags
 
 import tensorflow.compat.v2 as tf
 from google.protobuf import text_format
-from object_detection import export_tflite_graph_lib_tf2
+#from object_detection import export_tflite_graph_lib_tf2
+import export_tflite_graph_lib_tf2
 from object_detection.protos import pipeline_pb2
 
 tf.enable_v2_behavior()
@@ -95,7 +96,7 @@ flags.DEFINE_string(
     'config_override', '', 'pipeline_pb2.TrainEvalPipelineConfig '
     'text proto to override pipeline_config_path.')
 # SSD-specific flags
-flags.DEFINE_integer('ssd_max_detections', 10,
+flags.DEFINE_integer('ssd_max_detections', 15,
                      'Maximum number of detections (boxes) to return.')
 flags.DEFINE_bool(
     'ssd_use_regular_nms', False,

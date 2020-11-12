@@ -93,10 +93,10 @@ if labels[0] == '???':
 
 # Load the Tensorflow Lite model.
 # If using Edge TPU, use special load_delegate argument
+print(PATH_TO_CKPT)
 if use_TPU:
     interpreter = Interpreter(model_path=PATH_TO_CKPT,
                               experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
-    print(PATH_TO_CKPT)
 else:
     interpreter = Interpreter(model_path=PATH_TO_CKPT)
 
@@ -141,13 +141,12 @@ while(video.isOpened()):
     #boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
     #classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
     #scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
-    #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
+    #count = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
     boxes = get_output_tensor(interpreter, 0)
     classes = get_output_tensor(interpreter, 1)
     scores = get_output_tensor(interpreter, 2)
     count = int(get_output_tensor(interpreter, 3))
     # Loop over all detections and draw detection box if confidence is above minimum threshold
-    print(scores)
     for i in range(count):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
