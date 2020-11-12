@@ -199,7 +199,7 @@ while True:
     count = int(get_output_tensor(interpreter, 3))
 
     # Loop over all detections and draw detection box if confidence is above minimum threshold
-
+    print(scores)
     for i in range(count):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
@@ -211,7 +211,7 @@ while True:
             xmax = int(min(imW,(boxes[i][3] * imW)))
             
             cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
-
+            
             # Draw label
             object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
             label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
