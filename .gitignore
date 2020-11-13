@@ -14,3 +14,6 @@
 *.tar
 *.gz
 *.v2
+*.png
+tensorflow1/models/research/object_detection/test.record
+*.record

@@ -48,8 +48,8 @@ CWD_PATH = os.getcwd()
 # Path to frozen detection graph .pb file, which contains the model that is used
 # for object detection.
 #PATH_TO_CKPT = os.path.join(CWD_PATH,MODEL_NAME,'saved_model.pb')
-PATH_TO_CKPT = os.path.join(CWD_PATH,'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8','new_model')
-PATH_TO_CFG =  os.path.join(CWD_PATH,'training','ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8.config')
+PATH_TO_CKPT = os.path.join(CWD_PATH,'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8','new_model')
+PATH_TO_CFG =  os.path.join(CWD_PATH,'training','ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.config')
 
 # Path to label map file
 PATH_TO_LABELS = os.path.join(CWD_PATH,'training','labelmap.txt')
@@ -65,7 +65,7 @@ detection_model = model_builder.build(model_config=model_config, is_training=Fal
 
 # Restore checkpoint
 ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-ckpt.restore(os.path.join(PATH_TO_CKPT, 'ckpt-14')).expect_partial()
+ckpt.restore(os.path.join(PATH_TO_CKPT, 'ckpt-35')).expect_partial()
 
 @tf.function
 def detect_fn(image):
@@ -88,7 +88,7 @@ video = cv2.VideoCapture(PATH_TO_VIDEO)
 timeOld = time.time()
 frame_width = int(video.get(3))
 frame_height = int(video.get(4))
-out = cv2.VideoWriter('output.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width,frame_height))
+#out = cv2.VideoWriter('output.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width,frame_height))
 while(video.isOpened()):
 
     # Acquire frame and expand frame dimensions to have shape: [1, None, None, 3]
@@ -116,7 +116,7 @@ while(video.isOpened()):
           min_score_thresh=.35,
           agnostic_mode=False)
     #output to file
-    out.write(frame_with_detections)
+    #out.write(frame_with_detections)
 
     # All the results have been drawn on the frame, so it's time to display it.
     cv2.imshow('Object detector', frame_with_detections)
@@ -128,6 +128,6 @@ while(video.isOpened()):
     timeOld = time.time()
 # Clean up
 video.release()
-out.release()
+#out.release()
 cv2.destroyAllWindows()
 print('done')
