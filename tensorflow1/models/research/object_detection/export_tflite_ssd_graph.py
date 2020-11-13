@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-r"""Exports an SSD detection model to use with tf-lite.
+"""Exports an SSD detection model to use with tf-lite.
 
 Outputs file:
 * A tflite compatible frozen graph - $output_directory/tflite_graph.pb

@@ -15,5 +15,5 @@
 *.gz
 *.v2
 *.png
-tensorflow1/models/research/object_detection/test.record
 *.record
+piVisionModels/ssdmobilenet_v1_640x640.tflite
