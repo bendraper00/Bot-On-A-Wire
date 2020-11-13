@@ -15,5 +15,5 @@
 *.gz
 *.v2
 *.png
-*.record
 piVisionModels/ssdmobilenet_v1_640x640.tflite
+*.record
