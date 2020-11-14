@@ -4,37 +4,39 @@ import time
 import json
 import sys
 from io import StringIO
+from SimpleStateMachine.SimpleState import *
+
 
 stopSpeed = 1500;
-
 stopDistance = 30
 speedRange = 100
 distanceRange = 50
-
 forward = True
 
-def calcSpeed(distance, isFront): #1 for front and 0 for left
-    global forward
-    
-    if (distance < stopDistance and forward):
-        speed = 1400
-        forward = False
-    elif (distance < distanceRange and not forward):
-        speed = 1450
-    elif (distance > distanceRange - 10):
-        speed = 1600
-        forward = True
-    else:
-        forward = True
-        speed = stopSpeed + speedRange - (distanceRange - distance) / distanceRange * speedRange
-        if (speed < stopSpeed - speedRange):
-            speed = stopSpeed - speedRange
-        elif (speed > stopSpeed + speedRange):
-            speed = stopSpeed + speedRange
-        
-    print (distance, " ", speed)
-    
-    return speed
+control = ControlDetection()
+
+# def calcSpeed(distance, isFront): #1 for front and 0 for left
+#     global forward
+#     
+#     if (distance < stopDistance and forward):
+#         speed = 1400
+#         forward = False
+#     elif (distance < distanceRange and not forward):
+#         speed = 1450
+#     elif (distance > distanceRange - 10):
+#         speed = 1600
+#         forward = True
+#     else:
+#         forward = True
+#         speed = stopSpeed + speedRange - (distanceRange - distance) / distanceRange * speedRange
+#         if (speed < stopSpeed - speedRange):
+#             speed = stopSpeed - speedRange
+#         elif (speed > stopSpeed + speedRange):
+#             speed = stopSpeed + speedRange
+#         
+#     print (distance, " ", speed)
+#     
+#     return speed
 
 if __name__ == '__main__':
     try:
@@ -51,7 +53,8 @@ if __name__ == '__main__':
     ser.write(out.encode())
     while True:
         #print ("inside while loop")
-        out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
+        #out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
+        out = json.dumps({"speed": control.run(front, 1)}) + "\n"
         ser.write(out.encode())
         try:
             line = ser.readline().decode('utf-8')
