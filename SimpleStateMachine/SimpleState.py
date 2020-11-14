@@ -49,7 +49,7 @@ class ControlDetection:
         return speed
 
     def Run(distance, isFront):
-        detect = True
+        detectFront = True
 
         if my_state.get_state() == States.STOP:
             if distance <= stopDistance and isFront:
