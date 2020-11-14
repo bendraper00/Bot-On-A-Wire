@@ -35,8 +35,8 @@ concrete_func.inputs[0].set_shape([1, 640, 640, 3])
 converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete_func])
 
 converter = tf.lite.TFLiteConverter.from_saved_model("saved_model",signature_keys=['serving_default'])
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-#converter.experimental_new_converter = True
+#converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.experimental_new_converter = True
 converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
 tflite_model = converter.convert()
 
