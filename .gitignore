@@ -7,6 +7,7 @@
 !/tensorflow1/models/research/object_detection
 !/tensorflow1/models/research/slim
 !/tensorflow1/models/research/setup.py
+!Flow Chart.PNG
 *.jpg
 *.xml
 *.mp4
