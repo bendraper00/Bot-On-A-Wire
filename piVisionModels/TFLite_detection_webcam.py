@@ -199,7 +199,7 @@ while True:
     count = int(get_output_tensor(interpreter, 3))
 
     # Loop over all detections and draw detection box if confidence is above minimum threshold
-    print(scores)
+    # /print(scores)
     for i in range(count):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
