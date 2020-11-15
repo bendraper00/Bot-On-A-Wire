@@ -33,7 +33,7 @@ class ControlDetection:
         forward = True
         detectFront = False
         speed = 0
-    #detectBack = False
+        detectBack = False
 
     def calcSpeed(distance, isFront): #1 for front and 0 for left
         #calculate the distance to move
@@ -49,19 +49,20 @@ class ControlDetection:
         return speed
 
     def Run(distance, isFront):
-        detectFront = True
+        detectFront = True  #this is where the detection method will come in
+        #detectBack = True
 
         if my_state.get_state() == States.STOP:
             if distance <= stopDistance and isFront:
                 speed = stopSpeed
                 my_state.set_state(States.GOBACK)
-                if (isFront):
+                if (isFront): #if forward is too close then go backward
                     forward = false
-                else:
+                else: #if backward is too cloase then go forward
                     forward = true
                 return speed
             my_state.set_state(States.DETECT)
-            if (detectFront):
+            if (detectFront): #might not need this
                 return calcSpeed(distance, isFront)  # if not stop then keep moving
 
         elif my_state.get_state() == States.GOBACK:
@@ -83,6 +84,7 @@ class ControlDetection:
             #elif (detectBack):
             else:
                 return stopSpeed #don't move if don't detect anything
+        print("CurrentState: " + str(my_state.get_state()))
 
 
 
