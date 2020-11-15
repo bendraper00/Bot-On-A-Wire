@@ -4,7 +4,8 @@ import time
 import json
 import sys
 from io import StringIO
-from SimpleStateMachine.SimpleState import *
+#from SimpleState import *
+from piVisionModels.detector import*
 
 
 stopSpeed = 1500;
@@ -12,33 +13,50 @@ stopDistance = 30
 speedRange = 100
 distanceRange = 50
 forward = True
+detect = detector()
 
-control = ControlDetection()
+#control = ControlDetection()
 
-# def calcSpeed(distance, isFront): #1 for front and 0 for left
-#     global forward
-#     
-#     if (distance < stopDistance and forward):
-#         speed = 1400
-#         forward = False
-#     elif (distance < distanceRange and not forward):
-#         speed = 1450
-#     elif (distance > distanceRange - 10):
-#         speed = 1600
-#         forward = True
-#     else:
-#         forward = True
-#         speed = stopSpeed + speedRange - (distanceRange - distance) / distanceRange * speedRange
-#         if (speed < stopSpeed - speedRange):
-#             speed = stopSpeed - speedRange
-#         elif (speed > stopSpeed + speedRange):
-#             speed = stopSpeed + speedRange
-#         
-#     print (distance, " ", speed)
-#     
-#     return speed
+def calcSpeed(distance, isFront): #1 for front and 0 for left
+    global forward
+    
+    
+    if (distance < stopDistance and forward):
+        speed = 1400
+        forward = False
+    elif (distance < distanceRange and not forward):
+        speed = 1450
+    elif (distance > distanceRange - 10):
+        forward = True
+        if (Detect()):
+            print("DETECT")
+            speed = 1600
+        else:
+            speed = 1500
+    else:
+        forward = True
+        speed = stopSpeed + speedRange - (distanceRange - distance) / distanceRange * speedRange
+        if (speed < stopSpeed - speedRange):
+            speed = stopSpeed - speedRange
+        elif (speed > stopSpeed + speedRange):
+            speed = stopSpeed + speedRange
+        
+    print (distance, " ", speed)
+     
+    return speed
 
+def Detect():
+    #print ("Enter Detect")
+    box,label,confidence,count = detect.detect()
+    for confi in confidence:
+      #  print ("confidence level: %f", confi)
+        if confi >= 0.6:
+       #     print ("DETECT")
+            return True
+    return False
+    
 if __name__ == '__main__':
+    isDetect = Detect()
     try:
         ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     except:
@@ -46,6 +64,7 @@ if __name__ == '__main__':
             ser = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
         except:
             print("not usb0 or usb1")
+    #ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     ser.flush()
     front =0;
     back = 0;
@@ -53,8 +72,11 @@ if __name__ == '__main__':
     ser.write(out.encode())
     while True:
         #print ("inside while loop")
-        #out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
-        out = json.dumps({"speed": control.run(front, 1)}) + "\n"
+        out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
+        #speed = control.Run(front,1)
+        #speed = 1500
+        #out = json.dumps({"speed": speed}) + "\n"
+        #print(speed)
         ser.write(out.encode())
         try:
             line = ser.readline().decode('utf-8')

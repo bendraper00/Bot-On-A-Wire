@@ -19,11 +19,11 @@ class VideoStream:
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
-	# Variable to control when the camera is stopped
+    # Variable to control when the camera is stopped
         self.stopped = False
 
     def start(self):
-	# Start the thread that reads frames from the video stream
+    # Start the thread that reads frames from the video stream
         Thread(target=self.update,args=()).start()
         return self
 
@@ -40,11 +40,11 @@ class VideoStream:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
-	# Return the most recent frame
+    # Return the most recent frame
         return self.frame
 
     def stop(self):
-	# Indicate that the camera and thread should be stopped
+    # Indicate that the camera and thread should be stopped
         self.stopped = True
 
 def get_output_tensor(interpreter, index):
@@ -54,8 +54,8 @@ def get_output_tensor(interpreter, index):
   return tensor
 
 MODEL_NAME = ""
-GRAPH_NAME = "ssdmobilenet_v2_640x640.tflite"
-LABELMAP_NAME = "labelmap.txt"
+GRAPH_NAME = "/home/pi/Bot-On-A-Wire/piVisionModels/ssdmobilenet_v2_640x640.tflite"
+LABELMAP_NAME = "/home/pi/Bot-On-A-Wire/piVisionModels/labelmap.txt"
 min_conf_threshold = 0.4
 imW, imH = 1080, 720
 use_TPU = False
@@ -153,6 +153,7 @@ class detector:
         classes = get_output_tensor(interpreter, 1)
         scores = get_output_tensor(interpreter, 2)
         count = int(get_output_tensor(interpreter, 3))
+        cv2.imshow("Object Detector", frame)
         return boxes, classes, scores, count
 
     def showFrame(self):
