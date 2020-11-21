@@ -40,7 +40,7 @@ from object_detection.builders import model_builder
 
 # Name of the directory containing the object detection module we're using
 MODEL_NAME = 'inference_graph\saved_model'
-VIDEO_NAME = 'test2.mp4'
+VIDEO_NAME = 'neg.mp4'
 #test
 # Grab path to current working directory
 CWD_PATH = os.getcwd()
@@ -48,8 +48,8 @@ CWD_PATH = os.getcwd()
 # Path to frozen detection graph .pb file, which contains the model that is used
 # for object detection.
 #PATH_TO_CKPT = os.path.join(CWD_PATH,MODEL_NAME,'saved_model.pb')
-PATH_TO_CKPT = os.path.join(CWD_PATH,'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8','new_model')
-PATH_TO_CFG =  os.path.join(CWD_PATH,'training','ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.config')
+PATH_TO_CKPT = os.path.join(CWD_PATH,'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8','new_model')
+PATH_TO_CFG =  os.path.join(CWD_PATH,'training','ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.config')
 
 # Path to label map file
 PATH_TO_LABELS = os.path.join(CWD_PATH,'training','labelmap.txt')
@@ -65,7 +65,7 @@ detection_model = model_builder.build(model_config=model_config, is_training=Fal
 
 # Restore checkpoint
 ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-ckpt.restore(os.path.join(PATH_TO_CKPT, 'ckpt-35')).expect_partial()
+ckpt.restore(os.path.join(PATH_TO_CKPT, 'ckpt-51')).expect_partial()
 
 @tf.function
 def detect_fn(image):
