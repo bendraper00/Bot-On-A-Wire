@@ -6,6 +6,10 @@ class db{
   private:
   enum BUTTON_STATE{STABLE, UNSTABLE};
   BUTTON_STATE state = STABLE;
+
+  int tempButtonPosition = buttonPosition;
+  BUTTON_STATE statePrev = state;
+  
   int buttonPin = -1;
   int buttonPosition = 0;
   unsigned long timeSince;

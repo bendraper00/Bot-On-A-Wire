@@ -12,8 +12,6 @@ void db::Init(){
 bool db::checkButtonPress(){
   bool flag = false;
   buttonPosition = digitalRead(buttonPin);
-  static int tempButtonPosition = buttonPosition;
-  static BUTTON_STATE statePrev = state;
 
   switch(state){
     case STABLE:
