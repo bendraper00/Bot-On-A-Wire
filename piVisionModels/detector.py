@@ -54,9 +54,9 @@ def get_output_tensor(interpreter, index):
   return tensor
 
 MODEL_NAME = ""
-GRAPH_NAME = "ssdmobilenet_v2_320x320.tflite"
-LABELMAP_NAME = "labelmap.txt"
-min_conf_threshold = 0.4
+GRAPH_NAME = "C:/Bot-On-A-Wire/piVisionModels/ssdmobilenet_v2_320x320.tflite"
+LABELMAP_NAME = "C:/Bot-On-A-Wire/piVisionModels/labelmap.txt"
+min_conf_threshold = 0.5
 
 imW, imH = 1080, 720
 use_TPU = False
