@@ -32,6 +32,12 @@ int speedRange = 100;
 double distanceRange = 50;
 bool doneFire= true;
 
+struct DetectObject{
+  double area;
+  double x;
+  double y; 
+  };
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Hello");
@@ -49,33 +55,16 @@ void setup() {
   delay(500);
 }
 
+
+  
 void loop() {
   //{"speed":1500}
   float frontDist = getIRDist();
-  float backDist = getUltrsonicDistance();
+  float backDist = getUltrasonicDistance();
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
-  if (forward) {
-    motorSpeed = CalcSpeed(frontDist, true);
-    //Serial.println("forward");
-    if (tooClose(20, 9) && motorSpeed > 1500) {
-      myESC.speed(1500);
-    }
-    else {
-      myESC.speed(motorSpeed);
-      //Serial.println(motorSpeed);
-    }
-  }
-
-  else {
-    if (backDist > 80) backDist = 80;
-    if (backDist < 40) {
-      myESC.speed(1600);
-      forward = true;
-    }
-  }
-
-    if (Serial.available() > 0) {
+  
+   if (Serial.available() > 0) {
     //{"speed": 1500}
     String json = Serial.readStringUntil('\n');
     StaticJsonDocument<200> docIn;
@@ -87,22 +76,123 @@ void loop() {
       Serial.println(error.f_str());
       return;
     }
+   JsonArray input = docIn.to<JsonArray>();
     //motorSpeed = docIn["speed"];
     //Serial.println("Motor Speed: " + String(motorSpeed));
+    if (input.size() > 0)
+    {
+    DetectObject detectArray[15];
+    
+    for(int i =0; i < 15; i++)
+    {
+       DetectObject obj = {};
+      if (i < input.size())
+      { 
+      obj.area = input[i]["area"];
+      obj.x = input[i]["x"];
+      obj.y = input[i]["y"];
+      }
+      detectArray[i] = obj;
+    }
 
+    motorSpeed = DetectControl(detectArray);
+    }
+    else
+    {
+      motorSpeed = 1500;
+    }
+    
     StaticJsonDocument<200> doc;
-    doc["hello"] = "Hello from Arduino";
     //doc["frontDistance"] = frontDist;
     //doc["backDistance"] = backDist;
     serializeJson(doc, Serial);
     Serial.println("");
     }
     //Serial.println(getIRDist());
+    
+  if (forward) {
+    //Serial.println("forward");
+    if (tooClose(20, 9) && motorSpeed > 1500) {
+      myESC.speed(1500);
+    }
+    else {
+      myESC.speed(motorSpeed);
+      //Serial.println(motorSpeed);
+    }
+  }
+  else {
+    if (backDist > 80) backDist = 80;
+    if (backDist < 40) {
+      myESC.speed(1600);
+      forward = true;
+    }
+  }  
 }
 
-///Only apply for the front now
-int CalcSpeed(float distance, boolean isfront)
+/**
+ * For now this function will get the max area, calculate angle of camera to the closest bird
+ * then determine movement left or right
+ */
+int DetectControl(DetectObject detectArray[])
 {
+  DetectObject closestOne = {0,0,0};
+  for (int i =0; i< sizeof(detectArray)/sizeof(detectArray[0]); i++)
+  {
+    if (detectArray[i].area > closestOne.area)
+    {
+      closestOne = detectArray[i];
+    }
+  } 
+
+  return CalcDirection(closestOne.x, closestOne.y); 
+}
+
+double CalcDirection (double x, double y)
+{
+  double angleToX =0;
+  double centerX = 540;
+  double centerY = 360;
+  double angle =0;  //do nothing for now
+  bool isUp = false;
+  bool isLeft = false;
+
+  double thetaX = x - centerX;
+  double thetaY = y - centerY;
+  //angle = Math.atan2(thetaY/thetaX);
+  if (thetaX < 0) isLeft = true;
+  if (thetaY < 0) isUp = true;
+
+   if (isLeft) return (CalcSpeed_demo (getUltrasonicDistance(), true));
+   else return (CalcSpeed_demo (getIRDist(), false));
+}
+
+/**
+ * Calculat ethe speed if not close to pole -> go left or right if needed
+ */
+int CalcSpeed_demo (float distance, boolean isLeft)
+{
+  int mySpeed =0;
+  if (isLeft) forward = false;
+  else forward = true;
+  
+  if (distance <= stopDistance)
+  {
+    mySpeed = 1500;
+  }  
+  else
+  {
+    if (isLeft) mySpeed = 1400;
+    else mySpeed = 1600;
+  }
+  return mySpeed;
+}
+
+
+///Only apply for the front now
+int CalcSpeed(float distance, boolean isLeft)
+{ 
+  //isleft = true =  backward
+  //isLeft = false = forward
   int my_speed = 0;
   if (distance < stopDistance and forward)
   {
@@ -146,7 +236,7 @@ float getIRDist()
   return IRDist;
 }
 
-float getUltrsonicDistance()
+float getUltrasonicDistance()
 {
   return 5;
   /*long duration;
