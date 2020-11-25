@@ -28,12 +28,12 @@ if __name__ == '__main__':
     out = "\n"
     ser.write(out.encode())
     while True:
-       
         objects = []
+        data = {}
         for i in range(15):
             if(area[i] > 0):
-                objects.append(["area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]])
-        data= { "detections": objects}
+                data.append(str(i):{"area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]})
+        #data= { "detections": objects}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
         print(out)
