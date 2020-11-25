@@ -34,9 +34,10 @@ bool doneFire= true;
 
 void setup() {
   Serial.begin(9600);
-
+  Serial.println("Hello");
   //pinMode(trigPin, OUTPUT);
   //pinMode(echoPin, INPUT);
+  //Cannon.Init();
   delay(15000);
   myESC.arm();
   delay(15000);
@@ -54,14 +55,8 @@ void loop() {
   float backDist = getUltrsonicDistance();
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
-  doneFire = Cannon.DoneFire(); //done fire if not done, won't do anything other wise
-
   if (forward) {
     motorSpeed = CalcSpeed(frontDist, true);
-    if (frontDist < 50)
-    {
-      Cannon.Fire();  //Fire but will only really fire when the DoneFire is Done
-    }
     //Serial.println("forward");
     if (tooClose(20, 9) && motorSpeed > 1500) {
       myESC.speed(1500);
@@ -71,6 +66,7 @@ void loop() {
       //Serial.println(motorSpeed);
     }
   }
+
   else {
     if (backDist > 80) backDist = 80;
     if (backDist < 40) {
@@ -79,7 +75,6 @@ void loop() {
     }
   }
 
-  /**
     if (Serial.available() > 0) {
     //{"speed": 1500}
     String json = Serial.readStringUntil('\n');
@@ -92,20 +87,17 @@ void loop() {
       Serial.println(error.f_str());
       return;
     }
-
-    motorSpeed = docIn["speed"];
-
-
+    //motorSpeed = docIn["speed"];
     //Serial.println("Motor Speed: " + String(motorSpeed));
 
     StaticJsonDocument<200> doc;
-    doc["frontDistance"] = frontDist;
-    doc["backDistance"] = backDist;
+    doc["hello"] = "Hello from Arduino";
+    //doc["frontDistance"] = frontDist;
+    //doc["backDistance"] = backDist;
     serializeJson(doc, Serial);
     Serial.println("");
     }
     //Serial.println(getIRDist());
-  **/
 }
 
 ///Only apply for the front now
