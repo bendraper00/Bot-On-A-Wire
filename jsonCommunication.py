@@ -12,18 +12,11 @@ detect = detector()
 
 def Detect():
     #print ("Enter Detect")
-    box,label,confidence,count = detect.detect()
-    for confi in confidence:
-      #  print ("confidence level: %f", confi)
-        if confi >= 0.6:
-       #     print ("DETECT")
-            return True
-    return False
+    box, confidence = detect.detect()
+    return detect.filterData(box, confidence)
     
 if __name__ == '__main__':
-
-    list = [1,2,3,4]
-    isDetect = Detect()
+    area, center = Detect()
     try:
         ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     except:
@@ -34,8 +27,11 @@ if __name__ == '__main__':
     ser.flush()
     ser.write(out.encode())
     while True:
-        #print ("inside while loop")
-        out = json.dumps(list) + "\n"
+        data = {
+            "area" : area,
+            "centers" : center
+        }
+        out = json.dumps(data) + "\n"
         ser.write(out.encode())
         try:
             line = ser.readline().decode('utf-8')
