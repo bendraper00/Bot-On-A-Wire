@@ -54,7 +54,7 @@ def get_output_tensor(interpreter, index):
   return tensor
 
 MODEL_NAME = ""
-GRAPH_NAME = "ssdmobilenet_v2_640x640.tflite"
+GRAPH_NAME = "ssdmobilenet_v2_320x320.tflite"
 LABELMAP_NAME = "labelmap.txt"
 min_conf_threshold = 0.4
 imW, imH = 1080, 720
