@@ -19,11 +19,11 @@ class VideoStream:
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
-    # Variable to control when the camera is stopped
+	# Variable to control when the camera is stopped
         self.stopped = False
 
     def start(self):
-    # Start the thread that reads frames from the video stream
+	# Start the thread that reads frames from the video stream
         Thread(target=self.update,args=()).start()
         return self
 
@@ -40,11 +40,11 @@ class VideoStream:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
-    # Return the most recent frame
+	# Return the most recent frame
         return self.frame
 
     def stop(self):
-    # Indicate that the camera and thread should be stopped
+	# Indicate that the camera and thread should be stopped
         self.stopped = True
 
 def get_output_tensor(interpreter, index):
@@ -54,9 +54,10 @@ def get_output_tensor(interpreter, index):
   return tensor
 
 MODEL_NAME = ""
-GRAPH_NAME = "/home/pi/Bot-On-A-Wire/piVisionModels/ssdmobilenet_v2_640x640.tflite"
-LABELMAP_NAME = "/home/pi/Bot-On-A-Wire/piVisionModels/labelmap.txt"
+GRAPH_NAME = "ssdmobilenet_v2_320x320.tflite"
+LABELMAP_NAME = "labelmap.txt"
 min_conf_threshold = 0.4
+
 imW, imH = 1080, 720
 use_TPU = False
 
@@ -123,7 +124,7 @@ input_std = 127.5
 
 videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
 time.sleep(1)
-
+running =True
 
 
 class detector:
@@ -152,9 +153,9 @@ class detector:
         boxes = get_output_tensor(interpreter, 0)
         classes = get_output_tensor(interpreter, 1)
         scores = get_output_tensor(interpreter, 2)
-        count = int(get_output_tensor(interpreter, 3))
-        cv2.imshow("Object Detector", frame)
-        return boxes, classes, scores, count
+        if cv2.waitKey(1) == ord('q'):
+            running = False
+        return boxes, scores
 
     def showFrame(self):
         boxes, classes, scores, count, frame = self.detect()
@@ -181,6 +182,31 @@ class detector:
         # All the results have been drawn on the frame, so it's time to display it.
         cv2.imshow('Object detector', frame)
     
-    def exit():
+    def exit(self):
         cv2.destroyAllWindows()
         videostream.stop()
+
+    def isRunning(self):
+        return running
+    
+    def filterData(self, boxes, conf):
+        areas = []
+        centers = []
+        distFromEdge = 50
+        fractOfFrame = 0.5
+        for i in range(15):
+            ymin = int(max(1,(boxes[i][0] * imH)))
+            xmin = int(max(1,(boxes[i][1] * imW)))
+            ymax = int(min(imH,(boxes[i][2] * imH)))
+            xmax = int(min(imW,(boxes[i][3] * imW)))
+            if ((conf[i] > min_conf_threshold) and (ymin > distFromEdge) and (xmin > distFromEdge) and (imH - ymax > distFromEdge) and (imW - xmax > distFromEdge)):
+                area = (xmax - xmin)*(ymax - ymin)
+                if (imW*imH*fractOfFrame > area):
+                    areas.append(area)
+                else:
+                  areas.append(-1)  
+            else:
+                areas.append(-1)
+            centers.append([(xmin+xmax)/2,(ymin+ymax)/2])
+        return areas, centers
+
