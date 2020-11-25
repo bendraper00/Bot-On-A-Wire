@@ -35,7 +35,7 @@ if __name__ == '__main__':
         data= { "detections": {"area": area[1], "xCord" : center[1][0], "yCord" :  center[1][1]}}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
-        print(out)
+        '''print(out)
         try:
             line = ser.readline().decode('utf-8')
         except:
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
         hello = sensorInput["hello"]
 
-        print(str(hello) )
+        print(str(hello) )'''
         #time.sleep(1)
         #out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
         #ser.write(out.encode())
