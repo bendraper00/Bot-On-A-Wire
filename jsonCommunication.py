@@ -27,18 +27,19 @@ if __name__ == '__main__':
     ser.flush()
     ser.write(out.encode())
     while True:
-        data = {
-            "area" : area,
-            "centers" : center
-        }
+        data= { "detections": []}
+        for i in range(15):
+            if(area[i] > 0):
+                data.detections.append({"area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]})
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
+        print(out)
         try:
             line = ser.readline().decode('utf-8')
         except:
             print("An exception occurred")
         line = line.rstrip().replace('\'', '\"').replace('\n','')
-        #line = eval(line)
+        line = eval(line)
         if (line == ''):
             print("empty")
             continue
