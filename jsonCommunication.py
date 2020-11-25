@@ -36,6 +36,7 @@ if __name__ == '__main__':
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
         print(out)
+        print({"area": area[1], "xCord" : center[1][0], "yCord" :  center[1][1]})
         '''try:
             line = ser.readline().decode('utf-8')
         except:
