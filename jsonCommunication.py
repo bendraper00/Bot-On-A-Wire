@@ -32,7 +32,7 @@ if __name__ == '__main__':
         for i in range(15):
             if(area[i] > 0):
                 objects.append({"area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]})
-        data= { "detections": objects}
+        data= { "detections": {"area": area[1], "xCord" : center[1][0], "yCord" :  center[1][1]}}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
         print(out)
