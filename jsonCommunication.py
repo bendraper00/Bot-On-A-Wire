@@ -36,7 +36,8 @@ if __name__ == '__main__':
         data= { "detections": objects}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
-        print(out)
+        #print(out)
+        print(time.time()-timeOld)
         '''try:
             line = ser.readline().decode('utf-8')
         except:
