@@ -27,7 +27,7 @@ if __name__ == '__main__':
     out = "\n"
     ser.write(out.encode())
     while True:
-        timeOld = time.time()
+        #timeOld = time.time()
         area, center = Detect()
         objects = []
         for i in range(15):
@@ -36,8 +36,8 @@ if __name__ == '__main__':
         data= { "detections": objects}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
-        #print(out)
-        print(time.time()-timeOld)
+        print(out)
+        #print(time.time()-timeOld)
         '''try:
             line = ser.readline().decode('utf-8')
         except:
