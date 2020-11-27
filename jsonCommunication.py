@@ -16,6 +16,7 @@ def Detect():
     return detect.filterData(box, confidence)
     
 if __name__ == '__main__':
+    timeOld = time.time()
     area, center = Detect()
     try:
         ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
@@ -35,8 +36,7 @@ if __name__ == '__main__':
         data= { "detections": objects}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
-        #print(out)
-        print(objects)
+        print(out)
         '''try:
             line = ser.readline().decode('utf-8')
         except:
