@@ -16,8 +16,6 @@ def Detect():
     return detect.filterData(box, confidence)
     
 if __name__ == '__main__':
-    timeOld = time.time()
-    area, center = Detect()
     try:
         ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     except:
@@ -29,6 +27,8 @@ if __name__ == '__main__':
     out = "\n"
     ser.write(out.encode())
     while True:
+        timeOld = time.time()
+        area, center = Detect()
         objects = []
         for i in range(15):
             if(area[i] > 0):
