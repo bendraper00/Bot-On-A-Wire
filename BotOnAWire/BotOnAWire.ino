@@ -85,12 +85,13 @@ void loop() {
     
     for(int i =0; i < 15; i++)
     {
-       DetectObject obj = {};
+      DetectObject obj = {0,0,0};
       if (i < input.size())
       { 
-      obj.area = input[i]["area"];
-      obj.x = input[i]["x"];
-      obj.y = input[i]["y"];
+      obj.area = input[i]["detections"]["area"];
+      obj.x = input[i]["detections"]["xCord"];
+      obj.y = input[i]["detections"]["yCord"];
+        
       }
       detectArray[i] = obj;
     }
