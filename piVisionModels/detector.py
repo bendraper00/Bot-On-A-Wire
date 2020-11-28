@@ -192,7 +192,7 @@ class detector:
     def filterData(self, boxes, conf):
         areas = []
         centers = []
-        distFromEdge = 50
+        distFromEdge = 10
         fractOfFrame = 0.5
         for i in range(15):
             ymin = int(max(1,(boxes[i][0] * imH)))
