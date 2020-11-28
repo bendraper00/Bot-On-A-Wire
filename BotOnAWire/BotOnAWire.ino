@@ -64,8 +64,9 @@ void loop() {
   float backDist = getUltrasonicDistance();
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
-  
+  Serial.println ("in loop");
    if (Serial.available() > 0) {
+    Serial.println("reading");
     //{"speed": 1500}
     String json = Serial.readStringUntil('\n');
     StaticJsonDocument<200> docIn;
@@ -90,8 +91,13 @@ void loop() {
       if (i < input.size())
       { 
       obj.area = input[i]["detections"]["area"];
+      Serial.print (obj.area);
       obj.x = input[i]["detections"]["xCord"];
+      Serial.print (" ");
+      Serial.print (obj.x);
       obj.y = input[i]["detections"]["yCord"];
+      Serial.print (" ");
+      Serial.print (obj.y);
         
       }
       detectArray[i] = obj;
