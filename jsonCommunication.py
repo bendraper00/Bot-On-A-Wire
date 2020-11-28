@@ -17,10 +17,10 @@ def Detect():
     
 if __name__ == '__main__':
     try:
-        ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+        ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=2.5)
     except:
         try:
-            ser = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
+            ser = serial.Serial('/dev/ttyUSB1', 19200, timeout=2.5)
         except:
             print("not usb0 or usb1")
     ser.flush()
@@ -28,6 +28,10 @@ if __name__ == '__main__':
     ser.write(out.encode())
     while True:
         #timeOld = time.time()
+        #print ("sending 100")
+        #out = json.dumps(100) + "\n"
+        #ser.write(out.encode())
+        
         area, center = Detect()
         objects = []
         for i in range(15):
@@ -36,14 +40,16 @@ if __name__ == '__main__':
         data= { "detections": objects}
         out = json.dumps(data) + "\n"
         ser.write(out.encode())
+        print (sys.getsizeof(out))
         print(out)
         #print(time.time()-timeOld)
+
         try:
             line = ser.readline().decode('utf-8')
         except:
             print("An exception occurred")
         line = line.rstrip().replace('\'', '\"').replace('\n','')
-        line = eval(line)
+        #line = eval(line)
         if (line == ''):
             print("empty")
             continue
@@ -53,9 +59,9 @@ if __name__ == '__main__':
         except:
             print("invalid line: " + line)
 
-        hello = sensorInput["hello"]
+        #hello = sensorInput["hello"]
 
-        print(str(hello) )
+        #print(str(hello) )
         #time.sleep(1)
         #out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
         #ser.write(out.encode())
