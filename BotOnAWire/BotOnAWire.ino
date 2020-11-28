@@ -65,6 +65,7 @@ void loop() {
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
   Serial.println ("in loop");
+  
    if (Serial.available() > 0) {
     Serial.println("reading");
     //{"speed": 1500}
@@ -78,7 +79,8 @@ void loop() {
       Serial.println(error.f_str());
       return;
     }
-   JsonArray input = docIn.to<JsonArray>();
+    
+   JsonArray input = docIn["detections"].to<JsonArray>();
     //motorSpeed = docIn["speed"];
     //Serial.println("Motor Speed: " + String(motorSpeed));
     if (input.size() > 0)
@@ -90,12 +92,12 @@ void loop() {
       DetectObject obj = {0,0,0};
       if (i < input.size())
       { 
-      obj.area = input[i]["detections"]["area"];
+      obj.area = input[i]["area"];
       Serial.print (obj.area);
-      obj.x = input[i]["detections"]["xCord"];
+      obj.x = input[i]["xCord"];
       Serial.print (" ");
       Serial.print (obj.x);
-      obj.y = input[i]["detections"]["yCord"];
+      obj.y = input[i]["yCord"];
       Serial.print (" ");
       Serial.print (obj.y);
         
@@ -117,6 +119,8 @@ void loop() {
     serializeJson(doc, Serial);
     Serial.println("");
     }
+    else
+    {Serial.println ("serial not available");}
     //Serial.println(getIRDist());
     
   if (forward) {
