@@ -53,6 +53,7 @@ void setup() {
   delay(500);
   myESC.speed(1500);
   delay(500);
+   pinMode(13, OUTPUT);
 }
 
 
@@ -96,10 +97,12 @@ void loop() {
       detectArray[i] = obj;
     }
     motorSpeed = DetectControl(detectArray);
+    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level) 
     }
     else
     {
       motorSpeed = 1500;
+     digitalWrite(13, LOW); 
     }
     
     StaticJsonDocument<200> doc;
@@ -127,7 +130,7 @@ void loop() {
       forward = true;
     }
   }  
-  serial.println(motorspeed);
+  Serial.println(motorSpeed);
 }
 
 /**
@@ -175,7 +178,7 @@ int CalcSpeed_demo (float distance, boolean isLeft)
   int mySpeed =0;
   if (isLeft) forward = false;
   else forward = true;
-  
+
   if (distance <= stopDistance)
   {
     mySpeed = 1500;
