@@ -38,7 +38,7 @@ if __name__ == '__main__':
         ser.write(out.encode())
         print(out)
         #print(time.time()-timeOld)
-        '''try:
+        try:
             line = ser.readline().decode('utf-8')
         except:
             print("An exception occurred")
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         hello = sensorInput["hello"]
 
-        print(str(hello) )'''
+        print(str(hello) )
         #time.sleep(1)
         #out = json.dumps({"speed": calcSpeed(front, 1)}) + "\n"
         #ser.write(out.encode())
