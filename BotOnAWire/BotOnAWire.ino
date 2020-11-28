@@ -39,7 +39,8 @@ struct DetectObject{
   };
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(19200);
+  Serial.setTimeout(10000);
   Serial.println("Hello");
   //pinMode(trigPin, OUTPUT);
   //pinMode(echoPin, INPUT);
@@ -64,14 +65,14 @@ void loop() {
   float backDist = getUltrasonicDistance();
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
-  Serial.println ("in loop");
+  //Serial.println ("in loop");
   
    if (Serial.available() > 0) {
     Serial.println("reading");
     //{"speed": 1500}
     String json = Serial.readStringUntil('\n');
-    StaticJsonDocument<200> docIn;
-
+    int income = Serial.read();
+    StaticJsonDocument<800> docIn;
     DeserializationError error = deserializeJson(docIn, json);
 
     if (error) {
@@ -79,14 +80,21 @@ void loop() {
       Serial.println(error.f_str());
       return;
     }
+    else
+    {
+     Serial.print ("no Error");
+     Serial.print (json); 
+     Serial.print(sizeof(docIn));
+     }
     
-   JsonArray input = docIn["detections"].to<JsonArray>();
+    JsonArray input = docIn["detections"].to<JsonArray>();
     //motorSpeed = docIn["speed"];
     //Serial.println("Motor Speed: " + String(motorSpeed));
+    
     if (input.size() > 0)
     {
     DetectObject detectArray[15];
-    
+    Serial.print ("about ot read input");
     for(int i =0; i < 15; i++)
     {
       DetectObject obj = {0,0,0};
@@ -106,21 +114,22 @@ void loop() {
     }
     motorSpeed = DetectControl(detectArray);
     digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level) 
+    
     }
     else
     {
+      Serial.println("empty input");
       motorSpeed = 1500;
      digitalWrite(13, LOW); 
     }
     
     StaticJsonDocument<200> doc;
-    //doc["frontDistance"] = frontDist;
-    //doc["backDistance"] = backDist;
     serializeJson(doc, Serial);
     Serial.println("");
     }
     else
-    {Serial.println ("serial not available");}
+    {//Serial.println ("serial not available");
+      }
     //Serial.println(getIRDist());
     
   if (forward) {
