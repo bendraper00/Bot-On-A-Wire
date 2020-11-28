@@ -95,7 +95,6 @@ void loop() {
       }
       detectArray[i] = obj;
     }
-
     motorSpeed = DetectControl(detectArray);
     }
     else
@@ -128,6 +127,7 @@ void loop() {
       forward = true;
     }
   }  
+  serial.println(motorspeed);
 }
 
 /**
