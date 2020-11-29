@@ -33,15 +33,24 @@ if __name__ == '__main__':
         #ser.write(out.encode())
         
         area, center = Detect()
-        objects = []
+        #objects = []
+        #for i in range(15):
+        #    if(area[i] > 0):
+        #        objects.append({"area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]})
+        #data= { "detections": objects}
+        #out = json.dumps(data) + "\n"
+        #ser.write(out.encode())
+        
+        objects = ""
         for i in range(15):
-            if(area[i] > 0):
-                objects.append({"area": area[i], "xCord" : center[i][0], "yCord" :  center[i][1]})
-        data= { "detections": objects}
-        out = json.dumps(data) + "\n"
-        ser.write(out.encode())
-        print (sys.getsizeof(out))
-        print(out)
+            if (area[i] > 0):
+                if i != 0 and len(objects) != 0:
+                    objects = objects + ","
+                objects = objects + str(area[i])+ " " + str(center[i][0] )+ " "+str(center[i][1])
+        objects = objects + "\n"
+        ser.write(objects.encode())
+        #print (sys.getsizeof(out))
+        print(objects)
         #print(time.time()-timeOld)
 
         try:
