@@ -66,15 +66,15 @@ void loop() {
   //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
   addToArray(frontDist);
   //Serial.println ("in loop");
-  
    if (Serial.available() > 0) {
-    Serial.println("reading");
-    //{"speed": 1500}
-    String json = Serial.readStringUntil('\n');
-    int income = Serial.read();
+    motorSpeed = ReadParseSerial();
+    
+    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level) 
+
+/**
+ *   String json = Serial.readStringUntil('\n');
     StaticJsonDocument<800> docIn;
     DeserializationError error = deserializeJson(docIn, json);
-
     if (error) {
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.f_str());
@@ -84,10 +84,10 @@ void loop() {
     {
      Serial.print ("no Error");
      Serial.print (json); 
-     Serial.print(sizeof(docIn));
+     Serial.print(sizeof(json));
      }
     
-    JsonArray input = docIn["detections"].to<JsonArray>();
+    JsonArray input = docIn.to<JsonArray>();
     //motorSpeed = docIn["speed"];
     //Serial.println("Motor Speed: " + String(motorSpeed));
     
@@ -112,25 +112,19 @@ void loop() {
       }
       detectArray[i] = obj;
     }
-    motorSpeed = DetectControl(detectArray);
-    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level) 
-    
-    }
-    else
+       else
     {
       Serial.println("empty input");
       motorSpeed = 1500;
      digitalWrite(13, LOW); 
     }
-    
+     
     StaticJsonDocument<200> doc;
     serializeJson(doc, Serial);
     Serial.println("");
-    }
-    else
-    {//Serial.println ("serial not available");
-      }
-    //Serial.println(getIRDist());
+    **/
+
+   }
     
   if (forward) {
     //Serial.println("forward");
@@ -149,24 +143,84 @@ void loop() {
       forward = true;
     }
   }  
-  Serial.println(motorSpeed);
+  //Serial.println(motorSpeed);
 }
 
+
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+int ReadParseSerial()
+{
+   //Serial.println("reading");
+    //{"speed": 1500}
+    String sRead= Serial.readStringUntil('\n');
+    String str;
+     DetectObject detectArray[15];
+    //Serial.println(sRead);
+       
+    int i =0;
+    int j =0;
+    if (sRead.length() > 0)
+    {
+    while (i < sRead.length())
+    {
+      //DetectObject obj;
+      int pos = sRead.indexOf(",", i);
+      if (pos == -1 && i<sRead.length())
+      {
+        str = sRead.substring(i);
+        i = sRead.length();
+      }
+      else
+      {
+      str = sRead.substring(i, pos);
+      i = pos+1;
+      }
+    
+    String part01 = getValue(str,' ',0);
+    String part02 = getValue(str,' ',1);
+    String part03 = getValue(str,' ',2);
+     DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
+     detectArray[j] = obj;
+      j++;
+    }
+    return DetectControl(detectArray, j);
+    }
+    return 1500;
+  
+}
 /**
  * For now this function will get the max area, calculate angle of camera to the closest bird
  * then determine movement left or right
  */
-int DetectControl(DetectObject detectArray[])
+int DetectControl(DetectObject detectArray[],int arraySize)
 {
   DetectObject closestOne = {0,0,0};
-  for (int i =0; i< sizeof(detectArray)/sizeof(detectArray[0]); i++)
+  for (int i =0; i< arraySize; i++)
   {
     if (detectArray[i].area > closestOne.area)
     {
       closestOne = detectArray[i];
     }
   } 
-
+  Serial.print (closestOne.x);
+  Serial.print (" ");
+  Serial.println (closestOne.y);
   return CalcDirection(closestOne.x, closestOne.y); 
 }
 
@@ -182,13 +236,31 @@ double CalcDirection (double x, double y)
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
-  if (thetaX < 0) isLeft = true;
-  if (thetaY < 0) isUp = true;
+  Serial.println (thetaX);
+  if (thetaX < 0) 
+  {
+    isLeft = true;
+    Serial.println ("LEFT");
+    }
+    else
+    {
+      Serial.println ("RIGHT");
+    }
+  if (thetaY < 0) 
+  {
+    isUp = true;
+  }
 
-   if (isLeft) return (CalcSpeed_demo (getUltrasonicDistance(), true));
-   else return (CalcSpeed_demo (getIRDist(), false));
+   return (CalcSpeed_demo (getUltrasonicDistance(), isLeft));
 }
 
+void testDirection()
+{
+  CalcDirection (500, 0);
+  CalcDirection (600, 0);
+  CalcDirection (400 , 0);
+  CalcDirection (1000, 0);
+}
 /**
  * Calculat ethe speed if not close to pole -> go left or right if needed
  */
@@ -204,9 +276,10 @@ int CalcSpeed_demo (float distance, boolean isLeft)
   }  
   else
   {
-    if (isLeft) mySpeed = 1400;
-    else mySpeed = 1600;
+    if (isLeft) mySpeed = 1600;
+    else mySpeed = 1400;
   }
+  //Serial.println(mySpeed);
   return mySpeed;
 }
 
