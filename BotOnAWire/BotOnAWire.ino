@@ -7,8 +7,7 @@
 #include "debouncer.h"
 
 #define IRPin A0
-#define trigPin 8
-#define echoPin 9
+#define USPin A1
 #define arrayLength 10
 #define cannon_trigPin 2 //change if needed
 #define cannon_endPin 13 //change if needed
@@ -332,21 +331,9 @@ float getIRDist()
   return IRDist;
 }
 
-float getUltrasonicDistance()
+float getUltrasonicDistance() // returns distance in centimeters
 {
-  return 5;
-  /*long duration;
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(5);
-    // Trigger the sensor by setting the trigPin high for 10 microseconds:
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    // Read the echoPin, pulseIn() returns the duration (length of the pulse) in microseconds:
-    duration = pulseIn(echoPin, HIGH);
-    // Calculate the distance:
-    return duration * 0.034 / 2;
-  */
+  return (analogRead(USPin)/1024.0)*512*2.54;
 }
 
 void addToArray(float dist)
