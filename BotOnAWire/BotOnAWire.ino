@@ -7,7 +7,7 @@
 #include "debouncer.h"
 
 #define IRPin A0
-#define USPin A1
+#define USPin A2
 #define arrayLength 10
 #define cannon_trigPin 2 //change if needed
 #define cannon_endPin 13 //change if needed
@@ -17,7 +17,6 @@ ESC myESC (11, 1000, 2000, 2000);
 db cannonTrig (cannon_trigPin);
 db cannonEnd (cannon_endPin);
 airCannon Cannon(cannonTrig, cannonEnd, cannon_pinionPin);
-//Ultrasonic ultra (trigPin, echoPin);
 
 float forwardDistances[arrayLength];
 
@@ -28,8 +27,11 @@ bool dir_forward = true;
 int stopSpeed = 1500;
 double stopDistance = 30;
 int speedRange = 100;
+int horRange = 640;
 double distanceRange = 50;
 bool doneFire= true;
+float frontDist =0;
+ float backDist =0;
 
 struct DetectObject{
   double area;
@@ -41,8 +43,7 @@ void setup() {
   Serial.begin(19200);
   Serial.setTimeout(10000);
   Serial.println("Hello");
-  //pinMode(trigPin, OUTPUT);
-  //pinMode(echoPin, INPUT);
+  Serial.end();
   //Cannon.Init();
   delay(15000);
   myESC.arm();
@@ -53,95 +54,34 @@ void setup() {
   delay(500);
   myESC.speed(1500);
   delay(500);
-   pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT);
+  Serial.begin(19200);
 }
 
 
   
 void loop() {
-  //{"speed":1500}
-  float frontDist = getIRDist();
-  float backDist = getUltrasonicDistance();
-  //float backDist = ultra.read(); //Pass INC as parameter for dist in inch
+  frontDist = getIRDist();
+  backDist = getUltrasonicDistance();
+  //Serial.println (getIRDist());
+  //Serial.print (" ");
+  //Serial.println (getUltrasonicDistance());
   addToArray(frontDist);
-  //Serial.println ("in loop");
+  
    if (Serial.available() > 0) {
     motorSpeed = ReadParseSerial();
-    
-    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level) 
-
-/**
- *   String json = Serial.readStringUntil('\n');
-    StaticJsonDocument<800> docIn;
-    DeserializationError error = deserializeJson(docIn, json);
-    if (error) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
-    }
-    else
-    {
-     Serial.print ("no Error");
-     Serial.print (json); 
-     Serial.print(sizeof(json));
-     }
-    
-    JsonArray input = docIn.to<JsonArray>();
-    //motorSpeed = docIn["speed"];
-    //Serial.println("Motor Speed: " + String(motorSpeed));
-    
-    if (input.size() > 0)
-    {
-    DetectObject detectArray[15];
-    Serial.print ("about ot read input");
-    for(int i =0; i < 15; i++)
-    {
-      DetectObject obj = {0,0,0};
-      if (i < input.size())
-      { 
-      obj.area = input[i]["area"];
-      Serial.print (obj.area);
-      obj.x = input[i]["xCord"];
-      Serial.print (" ");
-      Serial.print (obj.x);
-      obj.y = input[i]["yCord"];
-      Serial.print (" ");
-      Serial.print (obj.y);
-        
-      }
-      detectArray[i] = obj;
-    }
-       else
-    {
-      Serial.println("empty input");
-      motorSpeed = 1500;
-     digitalWrite(13, LOW); 
-    }
-     
-    StaticJsonDocument<200> doc;
-    serializeJson(doc, Serial);
-    Serial.println("");
-    **/
-
    }
     
-  if (forward) {
-    //Serial.println("forward");
-    if (tooClose(20, 9) && motorSpeed > 1500) {
-      myESC.speed(1500);
-    }
-    else {
-      myESC.speed(motorSpeed);
-      //Serial.println(motorSpeed);
-    }
+  if (forward && frontDist <= stopDistance) {
+      motorSpeed = 1500;
+      Serial.println("Too Close IR");
   }
-  else {
-    if (backDist > 80) backDist = 80;
-    if (backDist < 40) {
-      myESC.speed(1600);
-      forward = true;
-    }
-  }  
+  else if (!forward && backDist <= stopDistance ) {
+      motorSpeed = 1500;
+      Serial.println("Too Close Ultra");
+  }
+  
+   myESC.speed(motorSpeed); 
   //Serial.println(motorSpeed);
 }
 
@@ -165,12 +105,10 @@ String getValue(String data, char separator, int index)
 
 int ReadParseSerial()
 {
-   //Serial.println("reading");
-    //{"speed": 1500}
     String sRead= Serial.readStringUntil('\n');
     String str;
      DetectObject detectArray[15];
-    //Serial.println(sRead);
+    Serial.println(sRead);
        
     int i =0;
     int j =0;
@@ -197,7 +135,12 @@ int ReadParseSerial()
      DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
      detectArray[j] = obj;
       j++;
+      if (part01 == "0")
+      {
+        return 1500;
+      }
     }
+    
     return DetectControl(detectArray, j);
     }
     return 1500;
@@ -217,28 +160,24 @@ int DetectControl(DetectObject detectArray[],int arraySize)
       closestOne = detectArray[i];
     }
   } 
-  Serial.print (closestOne.x);
-  Serial.print (" ");
-  Serial.println (closestOne.y);
   return CalcDirection(closestOne.x, closestOne.y); 
 }
 
 double CalcDirection (double x, double y)
 {
   double angleToX =0;
-  double centerX = 540;
+  double centerX = 640;
   double centerY = 360;
   double angle =0;  //do nothing for now
   bool isUp = false;
-  bool isLeft = false;
+  bool isFront = false;
 
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
-  Serial.println (thetaX);
   if (thetaX < 0) 
   {
-    isLeft = true;
+    isFront = true;
     Serial.println ("LEFT");
     }
     else
@@ -250,7 +189,14 @@ double CalcDirection (double x, double y)
     isUp = true;
   }
 
-   return (CalcSpeed_demo (getUltrasonicDistance(), isLeft));
+   if (isFront)
+   {
+    return (CalcSpeed_demo (frontDist, isFront, thetaX));
+   }
+   else
+   {
+   return (CalcSpeed_demo (backDist, isFront, thetaX));
+   }
 }
 
 void testDirection()
@@ -263,22 +209,29 @@ void testDirection()
 /**
  * Calculat ethe speed if not close to pole -> go left or right if needed
  */
-int CalcSpeed_demo (float distance, boolean isLeft)
+int CalcSpeed_demo (float distance, boolean isFront, double thetaX)
 {
   int mySpeed =0;
-  if (isLeft) forward = false;
-  else forward = true;
+  if (isFront) forward = true;
+  else forward = false;
 
-  if (distance <= stopDistance)
+  if (distance <= stopDistance )
   {
+    //Serial.println (distance);
     mySpeed = 1500;
   }  
   else
   {
-    if (isLeft) mySpeed = 1600;
-    else mySpeed = 1400;
+    mySpeed = stopSpeed - (thetaX * speedRange)/horRange;
+    if (mySpeed < stopSpeed - speedRange) 
+    {
+      mySpeed = stopSpeed - speedRange;
+    }
+    else if (mySpeed > stopSpeed + speedRange) 
+    {
+      mySpeed = stopSpeed + speedRange;
+    }
   }
-  //Serial.println(mySpeed);
   return mySpeed;
 }
 
@@ -333,7 +286,8 @@ float getIRDist()
 
 float getUltrasonicDistance() // returns distance in centimeters
 {
-  return (analogRead(USPin)/1024.0)*512*2.54;
+  //return (analogRead(USPin)/1024.0)*512*2.54;
+  return 50;
 }
 
 void addToArray(float dist)
