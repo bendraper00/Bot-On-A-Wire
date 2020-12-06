@@ -6,16 +6,25 @@ import sys
 import time
 from threading import Thread
 import importlib.util
+from picamera import PiCamera
+from picamera.array import PiRBGArray
 
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
-    def __init__(self,resolution=(1280,720),framerate=30):
+    isWebcam = True
+    def __init__(self,resolution=(1280,720),framerate=30, webcam):
         # Initialize the PiCamera and the camera image stream
-        self.stream = cv2.VideoCapture(0)
-        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-        ret = self.stream.set(3,resolution[0])
-        ret = self.stream.set(4,resolution[1])
-            
+        isWebcam = webcam
+        if webcam:
+            self.stream = cv2.VideoCapture(0)
+            ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            ret = self.stream.set(3,resolution[0])
+            ret = self.stream.set(4,resolution[1])
+        else:
+            with PiCamera() as camera
+                camera.resolution(resolution[0],resolution[1])
+                camera.framerate(framerate)
+                self.stream = camera.capture_continuous(PiRBGArray(camera,size=resolution), format="bgr", use_video_port=True)
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
@@ -58,7 +67,7 @@ GRAPH_NAME = "piVisionModels/ssdmobilenet_v2_320x320.tflite"
 LABELMAP_NAME = "piVisionModels/labelmap.txt"
 min_conf_threshold = 0.5
 
-imW, imH = 1280, 720
+imW, imH = 1080, 720
 use_TPU = False
 
 # Import TensorFlow libraries
@@ -122,7 +131,7 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
+videostream = VideoStream(resolution=(imW,imH),framerate=30,True).start()
 time.sleep(1)
 running =True
 
