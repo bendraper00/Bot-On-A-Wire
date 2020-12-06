@@ -7,7 +7,6 @@ import time
 from threading import Thread
 import importlib.util
 from picamera import PiCamera
-from picamera.array import PiRBGArray
 
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
@@ -24,7 +23,7 @@ class VideoStream:
             with PiCamera() as camera:
                 camera.resolution(resolution[0],resolution[1])
                 camera.framerate(framerate)
-                self.stream = camera.capture_continuous(PiRBGArray(camera,size=resolution), format="bgr", use_video_port=True)
+                self.stream = camera.capture_continuous( format="bgr")
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
