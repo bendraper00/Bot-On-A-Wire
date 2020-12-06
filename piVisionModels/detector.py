@@ -15,15 +15,12 @@ class VideoStream:
         # Initialize the PiCamera and the camera image stream
         #isWebcam = webcam
         if webcam:
-            self.stream = cv2.VideoCapture(1)
-            ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-            ret = self.stream.set(3,resolution[0])
-            ret = self.stream.set(4,resolution[1])
+            self.stream = cv2.VideoCapture(1) #webcam
         else:
-            with PiCamera() as camera:
-                camera.resolution = resolution
-                camera.framerate = framrate
-                self.stream = camera.capture_continuous( format="bgr")
+            self.stream = cv2.VideoCapture(0) #picam
+        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        ret = self.stream.set(3,resolution[0])
+        ret = self.stream.set(4,resolution[1])
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
@@ -130,7 +127,7 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-videostream = VideoStream(resolution=(imW,imH),framerate=30,webcam=True).start()
+videostream = VideoStream(resolution=(imW,imH),framerate=30,webcam=False).start()
 time.sleep(1)
 running =True
 
