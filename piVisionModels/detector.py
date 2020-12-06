@@ -136,7 +136,7 @@ running =True
 class detector:
     def detect(self,webcam):
             # Grab frame from video stream
-        frame1 = null
+        frame1 = None
         if webcam:
             frame1 = webcamStream.read()
         else:
