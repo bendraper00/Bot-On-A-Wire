@@ -21,7 +21,7 @@ class VideoStream:
             ret = self.stream.set(3,resolution[0])
             ret = self.stream.set(4,resolution[1])
         else:
-            with PiCamera() as camera
+            with PiCamera() as camera:
                 camera.resolution(resolution[0],resolution[1])
                 camera.framerate(framerate)
                 self.stream = camera.capture_continuous(PiRBGArray(camera,size=resolution), format="bgr", use_video_port=True)
