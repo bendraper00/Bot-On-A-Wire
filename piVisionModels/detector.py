@@ -11,8 +11,8 @@ from picamera.array import PiRBGArray
 
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
-    isWebcam = True
-    def __init__(self,resolution=(1280,720),framerate=30, webcam):
+    isWebcam
+    def __init__(self,resolution=(1280,720),framerate=30, webcam=True):
         # Initialize the PiCamera and the camera image stream
         isWebcam = webcam
         if webcam:
