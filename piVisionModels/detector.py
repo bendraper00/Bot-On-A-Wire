@@ -21,8 +21,8 @@ class VideoStream:
             ret = self.stream.set(4,resolution[1])
         else:
             with PiCamera() as camera:
-                camera.resolution(resolution[0],resolution[1])
-                camera.framerate(framerate)
+                camera.resolution = resolution
+                camera.framerate = framrate
                 self.stream = camera.capture_continuous( format="bgr")
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
