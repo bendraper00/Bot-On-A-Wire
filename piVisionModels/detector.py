@@ -131,7 +131,7 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-videostream = VideoStream(resolution=(imW,imH),framerate=30,True).start()
+videostream = VideoStream(resolution=(imW,imH),framerate=30,webcam=True).start()
 time.sleep(1)
 running =True
 
