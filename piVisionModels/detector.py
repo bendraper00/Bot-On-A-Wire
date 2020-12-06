@@ -127,15 +127,20 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-videostream = VideoStream(resolution=(imW,imH),framerate=30,webcam=False).start()
+webcamStream = VideoStream(resolution=(imW,imH),framerate=30,webcam=True).start()
+picamStream = VideoStream(resolution=(imW,imH),framerate=30,webcam=False).start()
 time.sleep(1)
 running =True
 
 
 class detector:
-    def detect(self):
+    def detect(self,webcam):
             # Grab frame from video stream
-        frame1 = videostream.read()
+        frame1 = null
+        if webcam:
+            frame1 = webcamStream.read()
+        else:
+            frame1 = picamStream.read()
         # Acquire frame and resize to expected shape [1xHxWx3]
         frame = frame1.copy()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -189,7 +194,8 @@ class detector:
     
     def exit(self):
         cv2.destroyAllWindows()
-        videostream.stop()
+        webcamStream.stop()
+        picamStream.stop()
 
     def isRunning(self):
         return running

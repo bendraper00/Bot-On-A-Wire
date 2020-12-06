@@ -12,7 +12,7 @@ detect = detector()
 
 def Detect():
     #print ("Enter Detect")
-    box, confidence = detect.detect()
+    box, confidence = detect.detect(True)
     return detect.filterData(box, confidence)
     
 if __name__ == '__main__':

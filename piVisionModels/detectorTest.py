@@ -5,7 +5,7 @@ dc = detector.detector()
 
 def main():
     while dc.isRunning():
-        boxes, conf = dc.detect()
+        boxes, conf = dc.detect(True)
         print(dc.filterData(boxes, conf))
     dc.exit()
 
