@@ -10,10 +10,10 @@ from picamera import PiCamera
 
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
-    isWebcam
+    #isWebcam
     def __init__(self,resolution=(1280,720),framerate=30, webcam=True):
         # Initialize the PiCamera and the camera image stream
-        isWebcam = webcam
+        #isWebcam = webcam
         if webcam:
             self.stream = cv2.VideoCapture(0)
             ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
