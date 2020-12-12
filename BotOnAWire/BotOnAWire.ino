@@ -3,9 +3,9 @@
 #include <ESC.h>
 #include <ArduinoJson.h>
 #include <Ultrasonic.h>
-#include <SoftwareSerial.h>
 #include "AirCannon.h"
 #include "debouncer.h"
+#include "DirectionalSound.h"
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
@@ -17,7 +17,7 @@ ESC myESC1 (8, 1000, 2000, 2000);
 ESC myESC2 (9, 1000, 2000, 2000);
 db cannonEnd (cannon_endPin);
 airCannon Cannon(cannonEnd, cannon_pinionPin);
-
+DirectionalSound dirSound();
 float forwardDistances[arrayLength];
 bool forward = true;
 int motorSpeed = 1500;
@@ -49,6 +49,7 @@ void setup() {
   Serial.println("Hello");
   Serial.end();
   Cannon.Init();
+  dirSound.init()
   myESC1.arm();
   myESC2.arm();
   myESC1.speed(1500);
@@ -76,7 +77,8 @@ void loop() {
    myESC1.speed(motorSpeed);
    myESC2.speed(motorSpeed);
 
-  //CannonControl();
+  CannonControl();
+  dirSound.update();
 }
 
 void CannonControl()
@@ -90,13 +92,12 @@ void CannonControl()
       cannon_st = HOLDING;
     }
     break;
-
     case HOLDING:
       if (Cannon.DoneFire()) cannon_st = DRAWING;
     break;
-
     }
 }
+
 String getValue(String data, char separator, int index)
 {
   int found = 0;

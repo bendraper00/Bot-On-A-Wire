@@ -1,5 +1,5 @@
 #include "DirectionalSound.h"
-
+#include <Arduino.h>
 void DirectionalSound::init(){
     pinMode(PWMOutPin, OUTPUT);
     pinMode(AudioIn, INPUT);
