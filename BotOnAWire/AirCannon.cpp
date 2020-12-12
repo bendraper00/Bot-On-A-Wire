@@ -1,8 +1,6 @@
 #include "AirCannon.h"
 
 airCannon::airCannon(db _endstop, int sp): endstop(_endstop){
-  //trigger = db trigger(trigPin);
-  //endstop = db endstop(esPin);
   servoPin = sp;
 }
 
@@ -14,7 +12,6 @@ void airCannon::Init(){
 }
 
 boolean airCannon::Fire(){
-  //if(trigger.checkButtonPress()) draw();
   draw();
   return robotState == DRAWING; //done drawing
 }
@@ -28,6 +25,7 @@ void airCannon::draw(){
   switch(robotState){
     case IDLE_STATE:
       pinion.write(45);
+      Serial.println("drawing pinion");
       robotState = DRAWING;
       break;
   }
@@ -38,6 +36,7 @@ void airCannon::hold(){
     case DRAWING:
       pinion.write(89);
       robotState = IDLE_STATE;
+      Serial.println("DONE FIRE");
       done = true;
       break;
   }

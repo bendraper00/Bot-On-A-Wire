@@ -6,7 +6,7 @@ db::db(int bp, unsigned long dp = 10){
 }
 
 void db::Init(){
-  pinMode(buttonPin, INPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
 }
 
 bool db::checkButtonPress(){
@@ -15,7 +15,7 @@ bool db::checkButtonPress(){
 
   switch(state){
     case STABLE:
-    if(statePrev == UNSTABLE && buttonPosition == LOW && tempButtonPosition == HIGH){
+    if(statePrev == UNSTABLE && buttonPosition == HIGH && tempButtonPosition == LOW){
       tempButtonPosition = buttonPosition;
       flag = true;
     }

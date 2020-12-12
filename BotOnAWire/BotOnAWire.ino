@@ -6,6 +6,7 @@
 #include "AirCannon.h"
 #include "debouncer.h"
 #include "DirectionalSound.h"
+#include <Servo.h>
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
@@ -16,20 +17,20 @@
 ESC myESC1 (8, 1000, 2000, 2000);
 ESC myESC2 (9, 1000, 2000, 2000);
 db cannonEnd (cannon_endPin);
-airCannon Cannon(cannonEnd, cannon_pinionPin);
-DirectionalSound dirSound();
+Servo pinion;
+//airCannon* Cannon = new airCannon(cannonEnd, cannon_pinionPin);
+DirectionalSound dirSound;
+
 float forwardDistances[arrayLength];
 bool forward = true;
 int motorSpeed = 1500;
-
 bool dir_forward = true;
 int stopSpeed = 1500;
 double stopDistance = 30;
-int speedRange = 150;
+int speedRange = 110;  //+- from 1500
 int speedSafety = 50;
 int horRange = 640;
 double distanceRange = 50;
-bool doneFire= true;
 float frontDist =0;
  float backDist =0;
 
@@ -43,13 +44,16 @@ enum RobotState {DETECT, LOOKING};
 enum CannonState {DRAWING, HOLDING};
 RobotState state = LOOKING;
 CannonState cannon_st = DRAWING;
+
 void setup() {
   Serial.begin(19200);
   Serial.setTimeout(10000);
   Serial.println("Hello");
   Serial.end();
-  Cannon.Init();
-  dirSound.init()
+  //Cannon->Init();
+  pinion.attach(cannon_pinionPin);
+  pinion.write(89);
+  dirSound.init();
   myESC1.arm();
   myESC2.arm();
   myESC1.speed(1500);
@@ -73,9 +77,8 @@ void loop() {
   if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
       motorSpeed = 1500;
   }
-
-   myESC1.speed(motorSpeed);
-   myESC2.speed(motorSpeed);
+   //myESC1.speed(motorSpeed);
+   //myESC2.speed(motorSpeed);
 
   CannonControl();
   dirSound.update();
@@ -88,12 +91,18 @@ void CannonControl()
     case DRAWING:
     if (state == DETECT)
     {
-      Cannon.Fire();
+      pinion.write(45);
+      Serial.println("drawing pinion");
       cannon_st = HOLDING;
     }
     break;
     case HOLDING:
-      if (Cannon.DoneFire()) cannon_st = DRAWING;
+      if (cannonEnd.checkButtonPress()) 
+      {
+        pinion.write(89);
+      cannon_st = DRAWING;
+      Serial.println("DONE FIRE");
+      }
     break;
     }
 }
@@ -154,8 +163,11 @@ int ReadParseSerial()
       }
     }
     state = DETECT;
+    Serial.println ("detect");
     return DetectControl(detectArray, j);
     }
+    
+    state = LOOKING;
     return 1500;
   
 }
@@ -214,13 +226,6 @@ double CalcDirection (double x, double y)
    }
 }
 
-void testDirection()
-{
-  CalcDirection (500, 0);
-  CalcDirection (600, 0);
-  CalcDirection (400 , 0);
-  CalcDirection (1000, 0);
-}
 /**
  * Calculat ethe speed if not close to pole -> go left or right if needed
  */
@@ -251,44 +256,6 @@ int CalcSpeed_demo (float distance,double thetaX)
   return mySpeed;
 }
 
-
-///Only apply for the front now
-int CalcSpeed(float distance, boolean isLeft)
-{ 
-  //isleft = true =  backward
-  //isLeft = false = forward
-  int my_speed = 0;
-  if (distance < stopDistance and forward)
-  {
-    my_speed = 1400;
-    dir_forward = false;
-  }
-  else if (distance < distanceRange and not forward)
-  {
-    my_speed = 1450;
-  }
-  else if (distance > distanceRange - 10)
-  {
-    dir_forward = true;
-    my_speed = 1500;
-  }
-  else {
-    dir_forward = true;
-    my_speed = stopSpeed + speedRange - (distanceRange - distance) / distanceRange * speedRange;
-    if (my_speed < stopSpeed - speedRange) 
-    {
-      my_speed = stopSpeed - speedRange;
-    }
-    else if (my_speed > stopSpeed + speedRange) 
-    {
-      my_speed = stopSpeed + speedRange;
-    }
-  }
-  Serial.print(distance);
-  Serial.print(" ");
-  Serial.print(my_speed);
-  return my_speed;
-}
 
 float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 {
