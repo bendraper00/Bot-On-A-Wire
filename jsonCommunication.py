@@ -12,7 +12,7 @@ detect = detector()
 
 def Detect():
     #print ("Enter Detect")
-    box, confidence = detect.detect()
+    box, confidence = detect.detect(True)
     return detect.filterData(box, confidence)
     
 if __name__ == '__main__':
@@ -26,6 +26,8 @@ if __name__ == '__main__':
     ser.flush()
     out = "\n"
     ser.write(out.encode())
+    done = False
+    
     while True:
         #timeOld = time.time()
         #print ("sending 100")
@@ -40,34 +42,35 @@ if __name__ == '__main__':
         #data= { "detections": objects}
         #out = json.dumps(data) + "\n"
         #ser.write(out.encode())
-        
+        counter = 0
         objects = ""
         for i in range(15):
             if (area[i] > 0):
                 if i != 0 and len(objects) != 0:
                     objects = objects + ","
                 objects = objects + str(area[i])+ " " + str(center[i][0] )+ " "+str(center[i][1])
+                counter = counter+1
+        if (counter ==0):
+            objects = "0 0 0"
         objects = objects + "\n"
+        #if (done):
         ser.write(objects.encode())
-        #print (sys.getsizeof(out))
+            #print (sys.getsizeof(out))
         print(objects)
-        #print(time.time()-timeOld)
+            #print(time.time()-timeOld)
 
-        try:
-            line = ser.readline().decode('utf-8')
-        except:
-            print("An exception occurred")
-        line = line.rstrip().replace('\'', '\"').replace('\n','')
+        #try:
+            #line = ser.readline().decode('utf-8')
+        #except:
+            #print("An exception occurred")
+        #line = line.rstrip().replace('\'', '\"').replace('\n','')
+        #print (line)
         #line = eval(line)
-        if (line == ''):
-            print("empty")
-            continue
-        
-        try:
-            sensorInput = json.loads(line)
-        except:
-            print("invalid line: " + line)
-
+        #if (line == ''):
+            #print("empty")
+            #continue
+        #elif ("Done" in line):
+            #done = True
         #hello = sensorInput["hello"]
 
         #print(str(hello) )

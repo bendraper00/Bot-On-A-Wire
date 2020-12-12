@@ -6,24 +6,29 @@ import sys
 import time
 from threading import Thread
 import importlib.util
+from picamera import PiCamera
 
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
-    def __init__(self,resolution=(1280,720),framerate=30):
+    #isWebcam
+    def __init__(self,resolution=(1280,720),framerate=30, webcam=True):
         # Initialize the PiCamera and the camera image stream
-        self.stream = cv2.VideoCapture(0)
+        #isWebcam = webcam
+        if webcam:
+            self.stream = cv2.VideoCapture(1) #webcam
+        else:
+            self.stream = cv2.VideoCapture(0) #picam
         ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         ret = self.stream.set(3,resolution[0])
         ret = self.stream.set(4,resolution[1])
-            
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
-	# Variable to control when the camera is stopped
+    # Variable to control when the camera is stopped
         self.stopped = False
 
     def start(self):
-	# Start the thread that reads frames from the video stream
+    # Start the thread that reads frames from the video stream
         Thread(target=self.update,args=()).start()
         return self
 
@@ -40,11 +45,11 @@ class VideoStream:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
-	# Return the most recent frame
+    # Return the most recent frame
         return self.frame
 
     def stop(self):
-	# Indicate that the camera and thread should be stopped
+    # Indicate that the camera and thread should be stopped
         self.stopped = True
 
 def get_output_tensor(interpreter, index):
@@ -58,7 +63,7 @@ GRAPH_NAME = "piVisionModels/ssdmobilenet_v2_320x320.tflite"
 LABELMAP_NAME = "piVisionModels/labelmap.txt"
 min_conf_threshold = 0.5
 
-imW, imH = 1280, 720
+imW, imH = 1080, 720
 use_TPU = False
 
 # Import TensorFlow libraries
@@ -122,15 +127,20 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
+webcamStream = VideoStream(resolution=(imW,imH),framerate=30,webcam=True).start()
+picamStream = VideoStream(resolution=(imW,imH),framerate=30,webcam=False).start()
 time.sleep(1)
 running =True
 
 
 class detector:
-    def detect(self):
+    def detect(self,webcam):
             # Grab frame from video stream
-        frame1 = videostream.read()
+        frame1 = None
+        if webcam:
+            frame1 = webcamStream.read()
+        else:
+            frame1 = picamStream.read()
         # Acquire frame and resize to expected shape [1xHxWx3]
         frame = frame1.copy()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -184,7 +194,8 @@ class detector:
     
     def exit(self):
         cv2.destroyAllWindows()
-        videostream.stop()
+        webcamStream.stop()
+        picamStream.stop()
 
     def isRunning(self):
         return running
@@ -192,8 +203,8 @@ class detector:
     def filterData(self, boxes, conf):
         areas = []
         centers = []
-        distFromEdge = 10
-        fractOfFrame = 0.5
+        distFromEdge = 5
+        fractOfFrame = 0.75
         for i in range(15):
             ymin = int(max(1,(boxes[i][0] * imH)))
             xmin = int(max(1,(boxes[i][1] * imW)))

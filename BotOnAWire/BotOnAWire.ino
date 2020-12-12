@@ -1,6 +1,4 @@
-
 //#include <HCSR04.h>
-//arduino uno: https://dl.espressif.com/dl/package_esp32_index.json
 
 #include <ESC.h>
 #include <ArduinoJson.h>
@@ -70,13 +68,13 @@ void loop() {
   
    if (Serial.available() > 0) {
     motorSpeed = ReadParseSerial();
-   }  
+   }
   if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
       motorSpeed = 1500;
   }
-  
+
    myESC1.speed(motorSpeed);
-   myESC2.speed(motorSpeed); 
+   myESC2.speed(motorSpeed);
 
   //CannonControl();
 }
@@ -96,7 +94,7 @@ void CannonControl()
     case HOLDING:
       if (Cannon.DoneFire()) cannon_st = DRAWING;
     break;
-    
+
     }
 }
 String getValue(String data, char separator, int index)
@@ -236,7 +234,7 @@ int CalcSpeed_demo (float distance,double thetaX)
   else
   {
     mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
-    
+
     if (mySpeed < stopSpeed - speedRange) 
     {
       mySpeed = stopSpeed - speedRange;
@@ -296,7 +294,7 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
   int distance = 0;
   if (isFront) distance = analogRead(USPin1);
   else distance = analogRead(USPin2);
-  
+
   return (distance/1024.0)*512*2.54;
   //return 50;
 }
