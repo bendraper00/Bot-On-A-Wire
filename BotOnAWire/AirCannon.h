@@ -11,15 +11,15 @@ class airCannon{
   int servoPin;
   int trigPin;
   int esPin;
-  db trigger;
+  //db trigger;
   db endstop;
   Servo pinion;
   boolean done = false;
 
   public:
-  airCannon(db trigPin, db esPin, int sp);
+  airCannon(db esPin, int sp);
   void Init();
-  void Fire();
+  boolean Fire();
   boolean DoneFire();
 
   protected:

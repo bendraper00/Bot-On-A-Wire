@@ -1,20 +1,22 @@
 #include "AirCannon.h"
 
-airCannon::airCannon(db _trigger, db _endstop, int sp): trigger(_trigger), endstop(_endstop){
+airCannon::airCannon(db _endstop, int sp): endstop(_endstop){
   //trigger = db trigger(trigPin);
   //endstop = db endstop(esPin);
   servoPin = sp;
 }
 
 void airCannon::Init(){
-  trigger.Init();
+  //trigger.Init();
   endstop.Init();
   pinion.attach(servoPin);
   pinion.write(89);
 }
 
-void airCannon::Fire(){
-  if(trigger.checkButtonPress()) draw();
+boolean airCannon::Fire(){
+  //if(trigger.checkButtonPress()) draw();
+  draw();
+  return robotState == DRAWING; //done drawing
 }
 
 boolean airCannon::DoneFire(){

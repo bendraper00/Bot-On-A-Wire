@@ -1,25 +1,26 @@
+
 //#include <HCSR04.h>
+//arduino uno: https://dl.espressif.com/dl/package_esp32_index.json
 
 #include <ESC.h>
 #include <ArduinoJson.h>
 #include <Ultrasonic.h>
+#include <SoftwareSerial.h>
 #include "AirCannon.h"
 #include "debouncer.h"
 
-#define IRPin A0
-#define USPin A2
+#define USPin1 A0  //front
+#define USPin2 A2    //back
 #define arrayLength 10
-#define cannon_trigPin 2 //change if needed
-#define cannon_endPin 13 //change if needed
-#define cannon_pinionPin 9 //change if needed
+#define cannon_endPin 2 //change if needed
+#define cannon_pinionPin 3 //change if needed
 
-ESC myESC (11, 1000, 2000, 2000);
-db cannonTrig (cannon_trigPin);
+ESC myESC1 (8, 1000, 2000, 2000);
+ESC myESC2 (9, 1000, 2000, 2000);
 db cannonEnd (cannon_endPin);
-airCannon Cannon(cannonTrig, cannonEnd, cannon_pinionPin);
+airCannon Cannon(cannonEnd, cannon_pinionPin);
 
 float forwardDistances[arrayLength];
-
 bool forward = true;
 int motorSpeed = 1500;
 
@@ -39,33 +40,36 @@ struct DetectObject{
   double y; 
   };
 
+enum RobotState {DETECT, TOOCLOSE, LOOKING};
+enum CannonState {DRAWING, HOLDING};
+RobotState state = LOOKING;
+CannonState cannon_st = DRAWING;
 void setup() {
   Serial.begin(19200);
   Serial.setTimeout(10000);
   Serial.println("Hello");
   Serial.end();
-  //Cannon.Init();
+  Cannon.Init();
   delay(15000);
-  myESC.arm();
+  myESC1.arm();
+  myESC2.arm();
   delay(15000);
-  myESC.speed(2000);
+  myESC1.speed(2000);
+  myESC2.speed(2000);
   delay(500);
-  myESC.speed(1000);
+  myESC1.speed(1000);
+  myESC2.speed(1000);
   delay(500);
-  myESC.speed(1500);
+  myESC1.speed(1500);
+  myESC2.speed(1500);
   delay(500);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
 }
 
-
-  
 void loop() {
-  frontDist = getIRDist();
-  backDist = getUltrasonicDistance();
-  //Serial.println (getIRDist());
-  //Serial.print (" ");
-  //Serial.println (getUltrasonicDistance());
+  frontDist = getUltrasonicDistance(true);  //front == true
+  backDist = getUltrasonicDistance(false);
   addToArray(frontDist);
   
    if (Serial.available() > 0) {
@@ -74,18 +78,36 @@ void loop() {
     
   if (forward && frontDist <= stopDistance) {
       motorSpeed = 1500;
-      Serial.println("Too Close IR");
+      //Serial.println("Too Close IR");
   }
   else if (!forward && backDist <= stopDistance ) {
       motorSpeed = 1500;
-      Serial.println("Too Close Ultra");
+      //Serial.println("Too Close Ultra");
   }
-  
-   myESC.speed(motorSpeed); 
+   myESC1.speed(motorSpeed);
+   myESC2.speed(motorSpeed); 
   //Serial.println(motorSpeed);
+  //CannonControl();
 }
 
+void CannonControl()
+{
+  switch (cannon_st)
+  {
+    case DRAWING:
+    if (state == DETECT)
+    {
+      Cannon.Fire();
+      cannon_st = HOLDING;
+    }
+    break;
 
+    case HOLDING:
+      if (Cannon.DoneFire()) cannon_st = DRAWING;
+    break;
+    
+    }
+}
 String getValue(String data, char separator, int index)
 {
   int found = 0;
@@ -107,8 +129,8 @@ int ReadParseSerial()
 {
     String sRead= Serial.readStringUntil('\n');
     String str;
-     DetectObject detectArray[15];
-    Serial.println(sRead);
+    DetectObject detectArray[15];
+    //Serial.println(sRead);
        
     int i =0;
     int j =0;
@@ -137,10 +159,11 @@ int ReadParseSerial()
       j++;
       if (part01 == "0")
       {
+        state = LOOKING;
         return 1500;
       }
     }
-    
+    state = DETECT;
     return DetectControl(detectArray, j);
     }
     return 1500;
@@ -178,11 +201,11 @@ double CalcDirection (double x, double y)
   if (thetaX < 0) 
   {
     isFront = true;
-    Serial.println ("LEFT");
+    //Serial.println ("LEFT");
     }
     else
     {
-      Serial.println ("RIGHT");
+      //Serial.println ("RIGHT");
     }
   if (thetaY < 0) 
   {
@@ -217,7 +240,7 @@ int CalcSpeed_demo (float distance, boolean isFront, double thetaX)
 
   if (distance <= stopDistance )
   {
-    //Serial.println (distance);
+    state == TOOCLOSE;
     mySpeed = 1500;
   }  
   else
@@ -274,20 +297,13 @@ int CalcSpeed(float distance, boolean isLeft)
   return my_speed;
 }
 
-float getIRDist()
+float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 {
-  float IRDist = 0;
-  float IRVal = analogRead(IRPin);
-  float IRVolt = (1024 / (IRVal * 5 ));
-  IRDist = (IRVolt - 0.0512) * 24.5;
-  if (IRDist > 80) IRDist = 80;
-  return IRDist;
-}
-
-float getUltrasonicDistance() // returns distance in centimeters
-{
-  //return (analogRead(USPin)/1024.0)*512*2.54;
-  return 50;
+  int distance = 0;
+  if (isFront) distance = analogRead(USPin1);
+  else distance = analogRead(USPin2);
+  return (distance/1024.0)*512*2.54;
+  //return 50;
 }
 
 void addToArray(float dist)
