@@ -9,5 +9,5 @@ void DirectionalSound::init(){
     OCR1C = 0;
 }
 void DirectionalSound::update(){
-   OCR1C =  map(analogRead(AudioIn),0,256,0,400);
+   OCR1C =  map(analogRead(AudioIn),0,1023,0,400);
 }
