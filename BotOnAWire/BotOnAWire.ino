@@ -27,7 +27,8 @@ int motorSpeed = 1500;
 bool dir_forward = true;
 int stopSpeed = 1500;
 double stopDistance = 30;
-int speedRange = 100;
+int speedRange = 150;
+int speedSafety = 50;
 int horRange = 640;
 double distanceRange = 50;
 bool doneFire= true;
@@ -40,7 +41,7 @@ struct DetectObject{
   double y; 
   };
 
-enum RobotState {DETECT, TOOCLOSE, LOOKING};
+enum RobotState {DETECT, LOOKING};
 enum CannonState {DRAWING, HOLDING};
 RobotState state = LOOKING;
 CannonState cannon_st = DRAWING;
@@ -50,19 +51,11 @@ void setup() {
   Serial.println("Hello");
   Serial.end();
   Cannon.Init();
-  delay(15000);
   myESC1.arm();
   myESC2.arm();
-  delay(15000);
-  myESC1.speed(2000);
-  myESC2.speed(2000);
-  delay(500);
-  myESC1.speed(1000);
-  myESC2.speed(1000);
-  delay(500);
   myESC1.speed(1500);
   myESC2.speed(1500);
-  delay(500);
+  delay(5000);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
 }
@@ -70,23 +63,21 @@ void setup() {
 void loop() {
   frontDist = getUltrasonicDistance(true);  //front == true
   backDist = getUltrasonicDistance(false);
+  //Serial.print(frontDist);
+  //Serial.print (" ");
+  //Serial.println(backDist);
   addToArray(frontDist);
   
    if (Serial.available() > 0) {
     motorSpeed = ReadParseSerial();
-   }
-    
-  if (forward && frontDist <= stopDistance) {
+   }  
+  if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
       motorSpeed = 1500;
-      //Serial.println("Too Close IR");
   }
-  else if (!forward && backDist <= stopDistance ) {
-      motorSpeed = 1500;
-      //Serial.println("Too Close Ultra");
-  }
+  
    myESC1.speed(motorSpeed);
    myESC2.speed(motorSpeed); 
-  //Serial.println(motorSpeed);
+
   //CannonControl();
 }
 
@@ -214,11 +205,13 @@ double CalcDirection (double x, double y)
 
    if (isFront)
    {
-    return (CalcSpeed_demo (frontDist, isFront, thetaX));
+    forward = true;
+    return (CalcSpeed_demo (frontDist, thetaX));
    }
    else
    {
-   return (CalcSpeed_demo (backDist, isFront, thetaX));
+    forward = false;
+   return (CalcSpeed_demo (backDist, thetaX));
    }
 }
 
@@ -232,20 +225,18 @@ void testDirection()
 /**
  * Calculat ethe speed if not close to pole -> go left or right if needed
  */
-int CalcSpeed_demo (float distance, boolean isFront, double thetaX)
+int CalcSpeed_demo (float distance,double thetaX)
 {
   int mySpeed =0;
-  if (isFront) forward = true;
-  else forward = false;
 
   if (distance <= stopDistance )
   {
-    state == TOOCLOSE;
     mySpeed = 1500;
   }  
   else
   {
-    mySpeed = stopSpeed - (thetaX * speedRange)/horRange;
+    mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
+    
     if (mySpeed < stopSpeed - speedRange) 
     {
       mySpeed = stopSpeed - speedRange;
@@ -254,6 +245,9 @@ int CalcSpeed_demo (float distance, boolean isFront, double thetaX)
     {
       mySpeed = stopSpeed + speedRange;
     }
+
+    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed;
+    else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
   }
   return mySpeed;
 }
@@ -302,6 +296,7 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
   int distance = 0;
   if (isFront) distance = analogRead(USPin1);
   else distance = analogRead(USPin2);
+  
   return (distance/1024.0)*512*2.54;
   //return 50;
 }

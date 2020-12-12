@@ -21,7 +21,7 @@ boolean airCannon::Fire(){
 
 boolean airCannon::DoneFire(){
   if(endstop.checkButtonPress()) hold(); 
-  return robotState == IDLE_STATE; 
+  return  robotState == IDLE_STATE; 
 }
 
 void airCannon::draw(){
@@ -39,5 +39,6 @@ void airCannon::hold(){
       pinion.write(89);
       robotState = IDLE_STATE;
       done = true;
+      break;
   }
 }
