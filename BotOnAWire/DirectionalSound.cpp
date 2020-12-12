@@ -6,7 +6,7 @@ void DirectionalSound::init(){
     TCCR1A = 0xA8;
     TCCR1B = 0x11;
     ICR1 = 400;
-    OCR1C = 0;
+    OCR2A = 0;
 }
 void DirectionalSound::update(){
    OCR1C =  map(analogRead(AudioIn),0,1023,0,400);
