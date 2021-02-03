@@ -14,7 +14,7 @@ ESC= 4  #Connect the ESC in this GPIO pin
 triggerPin = 27 
 echoPin = 17
 
-pi = pigpio.pi();
+pi = pigpio.pi()
 pi.set_servo_pulsewidth(ESC, 0)
 echo = Echo(triggerPin, echoPin, 340)
 

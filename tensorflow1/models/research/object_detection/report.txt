@@ -1,0 +1,19 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 1 files
+Detected 0 issues that require attention
+--------------------------------------------------------------------------------
+================================================================================
+Detailed log follows:
+
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'Object_detection_video.py'
+ outputting to 'Object_detection_video_v2.py'
+--------------------------------------------------------------------------------
+
+65:19: INFO: Renamed 'tf.GraphDef' to 'tf.compat.v1.GraphDef'
+66:9: INFO: Renamed 'tf.gfile.GFile' to 'tf.io.gfile.GFile'
+71:11: INFO: Renamed 'tf.Session' to 'tf.compat.v1.Session'
+--------------------------------------------------------------------------------
+
