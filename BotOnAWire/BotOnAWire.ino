@@ -1,12 +1,12 @@
 //#include <HCSR04.h>
 
 #include <ESC.h>
-#include <ArduinoJson.h>
-#include <Ultrasonic.h>
-#include "AirCannon.h"
-#include "debouncer.h"
-#include "DirectionalSound.h"
-#include <Servo.h>
+//#include <ArduinoJson.h>
+//#include <Ultrasonic.h>
+//#include "AirCannon.h"
+//#include "debouncer.h"
+//#include "DirectionalSound.h"
+//#include <Servo.h>
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
@@ -16,10 +16,10 @@
 
 ESC myESC1 (8, 1000, 2000, 2000);
 ESC myESC2 (9, 1000, 2000, 2000);
-db cannonEnd (cannon_endPin);
-Servo pinion;
+//db cannonEnd (cannon_endPin);
+//Servo pinion;
 //airCannon* Cannon = new airCannon(cannonEnd, cannon_pinionPin);
-DirectionalSound dirSound;
+//DirectionalSound dirSound;
 
 float forwardDistances[arrayLength];
 bool forward = true;
@@ -51,9 +51,9 @@ void setup() {
   Serial.println("Hello");
   Serial.end();
   //Cannon->Init();
-  pinion.attach(cannon_pinionPin);
-  pinion.write(89);
-  dirSound.init();
+  //pinion.attach(cannon_pinionPin);
+  //pinion.write(89);
+  //dirSound.init();
   myESC1.arm();
   myESC2.arm();
   myESC1.speed(1500);
@@ -74,17 +74,17 @@ void loop() {
    if (Serial.available() > 0) {
     motorSpeed = ReadParseSerial();
    }
-  if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
+ /* if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
       motorSpeed = 1500;
-  }
-   //myESC1.speed(motorSpeed);
-   //myESC2.speed(motorSpeed);
+  }*/
+   myESC1.speed(motorSpeed);
+   myESC2.speed(motorSpeed);
 
-  CannonControl();
-  dirSound.update();
+  //CannonControl();
+  //dirSound.update();
 }
 
-void CannonControl()
+/*void CannonControl()
 {
   switch (cannon_st)
   {
@@ -105,7 +105,7 @@ void CannonControl()
       }
     break;
     }
-}
+}*/
 
 String getValue(String data, char separator, int index)
 {

@@ -11,18 +11,16 @@ detect = detector()
 #control = ControlDetection()
 
 def Detect():
-    #print ("Enter Detect")
-    box, confidence = detect.detect(True)
-    return detect.filterData(box, confidence)
+    return detect.filterData(detect.detect(True))
     
 if __name__ == '__main__':
     try:
-        ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=2.5)
+         ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=2.5)
     except:
         try:
             ser = serial.Serial('/dev/ttyUSB1', 19200, timeout=2.5)
         except:
-            print("not usb0 or usb1")
+            print("not AMC0 or usb1")
     ser.flush()
     out = "\n"
     ser.write(out.encode())
@@ -44,19 +42,22 @@ if __name__ == '__main__':
         #ser.write(out.encode())
         counter = 0
         objects = ""
-        for i in range(15):
+        for i in range(len(area)):
             if (area[i] > 0):
                 if i != 0 and len(objects) != 0:
                     objects = objects + ","
+                    print("adding a comma")
                 objects = objects + str(area[i])+ " " + str(center[i][0] )+ " "+str(center[i][1])
                 counter = counter+1
         if (counter ==0):
             objects = "0 0 0"
         objects = objects + "\n"
         #if (done):
+        print("start")
+        print(objects)
         ser.write(objects.encode())
             #print (sys.getsizeof(out))
-        print(objects)
+        
             #print(time.time()-timeOld)
 
         #try:
