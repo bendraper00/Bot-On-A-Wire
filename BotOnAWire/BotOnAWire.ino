@@ -1,24 +1,13 @@
-//#include <HCSR04.h>
-
 #include <ESC.h>
-#include <ArduinoJson.h>
-#include <Ultrasonic.h>
-#include "AirCannon.h"
-#include "debouncer.h"
 #include "DirectionalSound.h"
-#include <Servo.h>
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
 #define arrayLength 10
-#define cannon_endPin 2 //change if needed
-#define cannon_pinionPin 3 //change if needed
 
 ESC myESC1 (8, 1000, 2000, 2000);
 ESC myESC2 (9, 1000, 2000, 2000);
-db cannonEnd (cannon_endPin);
-Servo pinion;
-//airCannon* Cannon = new airCannon(cannonEnd, cannon_pinionPin);
+
 DirectionalSound dirSound;
 
 float forwardDistances[arrayLength];
@@ -43,16 +32,13 @@ struct DetectObject{
 enum RobotState {DETECT, LOOKING};
 enum CannonState {DRAWING, HOLDING};
 RobotState state = LOOKING;
-CannonState cannon_st = DRAWING;
 
 void setup() {
   Serial.begin(19200);
   Serial.setTimeout(10000);
   Serial.println("Hello");
   Serial.end();
-  //Cannon->Init();
-  pinion.attach(cannon_pinionPin);
-  pinion.write(89);
+
   dirSound.init();
   myESC1.arm();
   myESC2.arm();
@@ -66,46 +52,39 @@ void setup() {
 void loop() {
   frontDist = getUltrasonicDistance(true);  //front == true
   backDist = getUltrasonicDistance(false);
-  //Serial.print(frontDist);
-  //Serial.print (" ");
-  //Serial.println(backDist);
-  addToArray(frontDist);
+  
+  Serial.print(frontDist);
+  Serial.print (" ");
+  Serial.println(backDist);
+  //addToArray(frontDist);
   
    if (Serial.available() > 0) {
     motorSpeed = ReadParseSerial();
    }
-  if (forward && frontDist <= stopDistance || (!forward && backDist <= stopDistance)) { //if too close
-      motorSpeed = 1500;
-  }
-   //myESC1.speed(motorSpeed);
-   //myESC2.speed(motorSpeed);
-
-  CannonControl();
-  dirSound.update();
-}
-
-void CannonControl()
-{
-  switch (cannon_st)
-  {
-    case DRAWING:
-    if (state == DETECT)
-    {
-      pinion.write(45);
-      Serial.println("drawing pinion");
-      cannon_st = HOLDING;
-    }
-    break;
-    case HOLDING:
-      if (cannonEnd.checkButtonPress()) 
-      {
-        pinion.write(89);
-      cannon_st = DRAWING;
-      Serial.println("DONE FIRE");
+   
+   if (state == LOOKING)
+   {  
+      if (forward && frontDist <= stopDistance ) 
+      { //if too close
+      motorSpeed = stopSpeed - speedRange;
+      Serial.print("BACKWARD");
+      forward = false;
       }
-    break;
-    }
+      else if (!forward && backDist <= stopDistance)
+      {
+        motorSpeed = stopSpeed + speedRange;
+        Serial.print("FORWARD");
+        forward = true;
+      }
+   }
+   
+//  Serial.println(state);
+  Serial.println(motorSpeed);
+  myESC1.speed(motorSpeed);
+  myESC2.speed(motorSpeed);
+  //dirSound.update();
 }
+
 
 String getValue(String data, char separator, int index)
 {
@@ -124,6 +103,9 @@ String getValue(String data, char separator, int index)
   return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
+/*
+
+*/
 int ReadParseSerial()
 {
     String sRead= Serial.readStringUntil('\n');
@@ -159,7 +141,7 @@ int ReadParseSerial()
       if (part01 == "0")
       {
         state = LOOKING;
-        return 1500;
+        return motorSpeed;
       }
     }
     state = DETECT;
@@ -168,7 +150,7 @@ int ReadParseSerial()
     }
     
     state = LOOKING;
-    return 1500;
+    return motorSpeed;
   
 }
 /**
@@ -188,6 +170,10 @@ int DetectControl(DetectObject detectArray[],int arraySize)
   return CalcDirection(closestOne.x, closestOne.y); 
 }
 
+/*
+Calculate the location of the detection with respect to the frame
+and return the the speed calculated from the given pixel coordinate detected
+*/
 double CalcDirection (double x, double y)
 {
   double angleToX =0;
@@ -203,11 +189,11 @@ double CalcDirection (double x, double y)
   if (thetaX < 0) 
   {
     isFront = true;
-    //Serial.println ("LEFT");
+    //Serial.println ("FORWARD");
     }
     else
     {
-      //Serial.println ("RIGHT");
+      //Serial.println ("BACKWARD");
     }
   if (thetaY < 0) 
   {
@@ -227,7 +213,9 @@ double CalcDirection (double x, double y)
 }
 
 /**
- * Calculat ethe speed if not close to pole -> go left or right if needed
+ * Calculate the speed if not close to pole
+ * go forward or backward coresponding to the location of detection with respect to the frame
+ * Only apply with the setup of one side camera
  */
 int CalcSpeed_demo (float distance,double thetaX)
 {
@@ -235,7 +223,8 @@ int CalcSpeed_demo (float distance,double thetaX)
 
   if (distance <= stopDistance )
   {
-    mySpeed = 1500;
+    mySpeed = stopSpeed;
+    forward = !forward;
   }  
   else
   {
@@ -256,7 +245,11 @@ int CalcSpeed_demo (float distance,double thetaX)
   return mySpeed;
 }
 
-
+/*
+Get the Ultrasnonic reading and perform conversion from analog to centimeter
+Reading from USPin1 if isFront is true meaning the robot is going forward (away from the charging station)
+Reading from USPin2 if isFront is false -> going backward (toward the charging station)
+*/
 float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 {
   int distance = 0;
@@ -264,40 +257,39 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
   else distance = analogRead(USPin2);
 
   return (distance/1024.0)*512*2.54;
-  //return 50;
 }
 
-void addToArray(float dist)
-{
-  for (int k = arrayLength - 1; k > 0; k--)
-  {
-    float old = forwardDistances[k - 1];
-    forwardDistances[k] = old;
-    //Serial.print(old);
-  }
-  forwardDistances[0] = dist;
-  //Serial.println(forwardDistances[0]);
-}
-
-bool tooClose(float dist, int valid)
-{
-  int count = 0;
-  for (int k = 0; k < arrayLength - 1; k++)
-  {
-    if (forwardDistances[k] < dist) count++;
-  }
-  //Serial.println(count);
-  return count >= valid;
-}
-
-float frontAvg()
-{
-  int count = 0;
-  for (int k = 0; k < arrayLength - 1; k++)
-  {
-    count += forwardDistances[k];
-  }
-  float avg = count / arrayLength;
-  //Serial.println(avg);
-  return avg;
-}
+//void addToArray(float dist)
+//{
+//  for (int k = arrayLength - 1; k > 0; k--)
+//  {
+//    float old = forwardDistances[k - 1];
+//    forwardDistances[k] = old;
+//    //Serial.print(old);
+//  }
+//  forwardDistances[0] = dist;
+//  //Serial.println(forwardDistances[0]);
+//}
+//
+//bool tooClose(float dist, int valid)
+//{
+//  int count = 0;
+//  for (int k = 0; k < arrayLength - 1; k++)
+//  {
+//    if (forwardDistances[k] < dist) count++;
+//  }
+//  //Serial.println(count);
+//  return count >= valid;
+//}
+//
+//float frontAvg()
+//{
+//  int count = 0;
+//  for (int k = 0; k < arrayLength - 1; k++)
+//  {
+//    count += forwardDistances[k];
+//  }
+//  float avg = count / arrayLength;
+//  //Serial.println(avg);
+//  return avg;
+//}
