@@ -11,14 +11,14 @@ fileName = "detectRecords.txt"
 totalDetections = 0
 countFrames = 0
 #control = ControlDetection()
-def writeRecords(){
+def writeRecords():
     myFile = open(fileName, 'a')
     myFile.write(totalDetections/countFrames)
     print(totalDetections/countFrames)
     totalDetections = 0
     countFrames = 0
     myFile.close()
-}
+
 def Detect():
     return detect.filterData(detect.detect(True))
     

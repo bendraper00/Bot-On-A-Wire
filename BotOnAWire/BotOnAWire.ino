@@ -47,7 +47,7 @@ void setup() {
   delay(5000);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
-  motorSpeed = stopSpeed+speedRange; // sets the inital direction
+ // motorSpeed = stopSpeed+speedRange; // sets the inital direction
 }
 
 void loop() {
@@ -63,7 +63,7 @@ void loop() {
     motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
-   /*if (state == LOOKING){ // if not currently chasing
+   if (state == LOOKING){ // if not currently chasing
      
       if(frontDist <= stopDistance && backDist <= stopDistance ){
         Serial.print("Stopped");
@@ -82,8 +82,8 @@ void loop() {
           motorSpeed = stopSpeed - speedRange;
         }
       }
-   }*/
-   if (state == LOOKING)
+   }
+   /*if (state == LOOKING)
    {  
       if (forward && frontDist-8 <= stopDistance ) // front Dist tends to read high
       { //if too close
@@ -97,7 +97,7 @@ void loop() {
         //Serial.print("FORWARD");
         forward = true;
       }
-   }
+   }*/
    
 //  Serial.println(state);
   Serial.println(motorSpeed);
