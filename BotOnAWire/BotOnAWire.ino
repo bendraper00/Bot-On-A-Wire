@@ -2,7 +2,7 @@
 #include <DShot.h>
 #include <SoftwareSerial.h>
 
-//#include "DirectionalSound.h"
+#include "DirectionalSound.h"
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
@@ -19,7 +19,7 @@ SoftwareSerial mySerial1(2, 3); // RX, TX
 
 const byte telemetryPin1 = 2;
 const byte telemetryPin2 = 2;
-volatile byte state = LOW;
+volatile byte st = LOW;
 
 static volatile uint8_t *buffer;
 #define bufferSize 10
@@ -40,24 +40,35 @@ typedef struct {
 
 escSensorData_t escSensorData;
 
-//DirectionalSound dirSound;
 
+DirectionalSound dirSound;
+
+
+//bool forward = true;
+//int motorSpeed = 1500;
+//bool dir_forward = true;
+//int stopSpeed = 1500;
+//double stopDistance = 30;
+//int speedRange = 130;  //+- from 1500
+//int patrollingSpeed = 80;
+//int speedSafety = 50;
+//int horRange = 640;
+//double distanceRange = 50;
+//float frontDist =0;
+//float backDist =0;
+
+unsigned long lastDetect = 0;
 float forwardDistances[arrayLength];
 bool forward = true;
 bool dir_forward = true;
-
-//int motorSpeed = 1500;
-//int stopSpeed = 1500;
-//int speedRange = 110;  //+- from 1500
-//int speedSafety = 50;
 
 int motorMin = 49;
 int motorMax = 2048;
 int motorSpeed = 1048;
 int stopSpeed = 1048;
 int speedRange = 700; //was 1000
-int speedSafety = 50;
-
+int speedSafety = 0; //Figure this out
+int patrollingSpeed = 500; //Figure this out
 
 double stopDistance = 30;
 int horRange = 640;
@@ -73,7 +84,7 @@ struct DetectObject{
 
 enum RobotState {DETECT, LOOKING};
 enum CannonState {DRAWING, HOLDING};
-RobotState robot_state = LOOKING;
+RobotState state = LOOKING;
 
 void setup() {
   Serial.begin(19200);
@@ -102,41 +113,61 @@ void setup() {
   Serial.begin(19200);
 }
 
+
 void loop() {
-  frontDist = getUltrasonicDistance(true);  //front == true
-  backDist = getUltrasonicDistance(false);
+  frontDist = getUltrasonicDistance(true)-8;  //front == true// front Dist tends to read high
+  backDist = getUltrasonicDistance(false)+8; //back dist tends to read low
   
   Serial.print(frontDist);
-  Serial.print (" ");
+  Serial.print(" ");
   Serial.println(backDist);
   //addToArray(frontDist);
   
    if (Serial.available() > 0) {
-    motorSpeed = ReadParseSerial();
+    motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
-   if (robot_state == LOOKING)
-   {  
-      if (forward && frontDist <= stopDistance ) 
-      { //if too close
-      motorSpeed = stopSpeed - speedRange;
-      Serial.print("BACKWARD");
-      forward = false;
-      }
-      else if (!forward && backDist <= stopDistance)
-      {
-        motorSpeed = stopSpeed + speedRange;
-        Serial.print("FORWARD");
-        forward = true;
+   if (state == LOOKING && millis()-lastDetect > 1000){ // if not currently chasing
+     
+      if(frontDist <= stopDistance && backDist <= stopDistance ){
+        Serial.print("Stopped");
+        motorSpeed = stopSpeed;
+      }else{
+        if ( frontDist <= stopDistance ){ 
+         //if too close
+          Serial.print("BACKWARD");
+          forward = false;
+        }else if ( backDist <= stopDistance){
+          Serial.print("FORWARD");
+          forward = true;
+        }if (forward){
+          motorSpeed = stopSpeed + patrollingSpeed;
+        }else if (!forward){
+          motorSpeed = stopSpeed - patrollingSpeed;
+        }
       }
    }
+   /*if (state == LOOKING)
+   {  
+      if (forward && frontDist-8 <= stopDistance ) // front Dist tends to read high
+      { //if too close
+      motorSpeed = stopSpeed - speedRange;
+      //Serial.print("BACKWARD");
+      forward = false;
+      }
+      else if (!forward && backDist+ 8 <= stopDistance) //back dist tends to read low
+      {
+        motorSpeed = stopSpeed + speedRange;
+        //Serial.print("FORWARD");
+        forward = true;
+      }
+   }*/
    
 //  Serial.println(state);
   Serial.println(motorSpeed);
 //  myESC1.speed(motorSpeed);
 //  myESC2.speed(motorSpeed);
   setMotorSpeeds(motorSpeed);
-
   //dirSound.update();
 }
 
@@ -170,41 +201,36 @@ int ReadParseSerial()
        
     int i =0;
     int j =0;
-    if (sRead.length() > 0)
-    {
-    while (i < sRead.length())
-    {
-      //DetectObject obj;
-      int pos = sRead.indexOf(",", i);
-      if (pos == -1 && i<sRead.length())
-      {
-        str = sRead.substring(i);
-        i = sRead.length();
+    if (sRead.length() > 0){
+      while (i < sRead.length()){
+        //DetectObject obj;
+        int pos = sRead.indexOf(",", i);
+        if (pos == -1 && i<sRead.length()){
+          str = sRead.substring(i);
+          i = sRead.length();
+        }else{
+          str = sRead.substring(i, pos);
+          i = pos+1;
+        }
+        
+        String part01 = getValue(str,' ',0);
+        String part02 = getValue(str,' ',1);
+        String part03 = getValue(str,' ',2);
+        DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
+        detectArray[j] = obj;
+        j++;
+        if (part01 == "0"){
+          state = LOOKING;
+          return motorSpeed;
+        }
       }
-      else
-      {
-      str = sRead.substring(i, pos);
-      i = pos+1;
-      }
-    
-    String part01 = getValue(str,' ',0);
-    String part02 = getValue(str,' ',1);
-    String part03 = getValue(str,' ',2);
-     DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
-     detectArray[j] = obj;
-      j++;
-      if (part01 == "0")
-      {
-        robot_state = LOOKING;
-        return motorSpeed;
-      }
-    }
-    robot_state = DETECT;
-    Serial.println ("detect");
-    return DetectControl(detectArray, j);
+      state = DETECT;
+      Serial.println ("detect");
+      lastDetect = millis();
+      return DetectControl(detectArray, j);
     }
     
-    robot_state = LOOKING;
+    state = LOOKING;
     return motorSpeed;
   
 }
@@ -241,30 +267,20 @@ double CalcDirection (double x, double y)
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
-  if (thetaX < 0) 
-  {
+  if (thetaX < 0) {
     isFront = true;
     //Serial.println ("FORWARD");
-    }
-    else
-    {
-      //Serial.println ("BACKWARD");
-    }
-  if (thetaY < 0) 
-  {
+  }
+  if (thetaY < 0) {
     isUp = true;
   }
-
-   if (isFront)
-   {
+  if (isFront){
     forward = true;
     return (CalcSpeed_demo (frontDist, thetaX));
-   }
-   else
-   {
+  }else{
     forward = false;
-   return (CalcSpeed_demo (backDist, thetaX));
-   }
+    return (CalcSpeed_demo (backDist, thetaX));
+  }
 }
 
 /**
@@ -276,25 +292,19 @@ int CalcSpeed_demo (float distance,double thetaX)
 {
   int mySpeed =0;
 
-  if (distance <= stopDistance )
-  {
+  if (distance <= stopDistance ){
     mySpeed = stopSpeed;
     forward = !forward;
-  }  
-  else
-  {
-    mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
-
-    if (mySpeed < stopSpeed - speedRange) 
-    {
+  }else{
+    mySpeed = stopSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection
+  
+    if (mySpeed < stopSpeed - speedRange){ //limits the speed
       mySpeed = stopSpeed - speedRange;
-    }
-    else if (mySpeed > stopSpeed + speedRange) 
-    {
+    }else if (mySpeed > stopSpeed + speedRange){
       mySpeed = stopSpeed + speedRange;
     }
 
-    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed;
+    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed; // prevent the speed from being too low
     else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
   }
   return mySpeed;
@@ -313,6 +323,42 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 
   return (distance/1024.0)*512*2.54;
 }
+
+//void addToArray(float dist)
+//{
+//  for (int k = arrayLength - 1; k > 0; k--)
+//  {
+//    float old = forwardDistances[k - 1];
+//    forwardDistances[k] = old;
+//    //Serial.print(old);
+//  }
+//  forwardDistances[0] = dist;
+//  //Serial.println(forwardDistances[0]);
+//}
+//
+//bool tooClose(float dist, int valid)
+//{
+//  int count = 0;
+//  for (int k = 0; k < arrayLength - 1; k++)
+//  {
+//    if (forwardDistances[k] < dist) count++;
+//  }
+//  //Serial.println(count);
+//  return count >= valid;
+//}
+//
+//float frontAvg()
+//{
+//  int count = 0;
+//  for (int k = 0; k < arrayLength - 1; k++)
+//  {
+//    count += forwardDistances[k];
+//  }
+//  float avg = count / arrayLength;
+//  //Serial.println(avg);
+//  return avg;
+//}
+
 
 /* set motor speed for DShot */
 void setMotorSpeeds(int motorSpeed) {

@@ -1,9 +1,9 @@
 import jetson.utils
 
 
-camera = jetson.utils.videoSource("/dev/video1")#/home/jetson/test.mp4", argv=["--input-codec=mpeg4"])
+camera = jetson.utils.videoSource("/dev/video0")#/home/jetson/test.mp4", argv=["--input-codec=mpeg4"])
 #camera1 = jetson.utils.videoSource("/dev/video1")
-#display = jetson.utils.videoOutput("display://0") 
+#display = jetson.utils.videoOutput("liveTest.mp4") 
 
 import jetson.inference
 net = jetson.inference.detectNet(argv=["--model=/home/jetson/jetson-inference/python/training/detection/ssd/models/cormorantModel/ssd-mobilenet.onnx","--labels=/home/jetson/jetson-inference/python/training/detection/ssd/models/cormorantModel/labels.txt", "--input-blob=input_0", "--output-cvg=scores","--output_bbox=boxes"] , threshold=0.5)
@@ -23,6 +23,7 @@ class detector:
 		captures = []
 		if frame:
 			captures = net.Detect(frame)
+			#display.Render(frame)
 		return captures 
     
 	def filterData(self, detections):

@@ -7,8 +7,17 @@ from io import StringIO
 from piVisionModels.detector import*
 
 detect = detector()
-
+fileName = "detectRecords.txt"
+totalDetections = 0
+countFrames = 0
 #control = ControlDetection()
+def writeRecords():
+    myFile = open(fileName, 'a')
+    myFile.write(totalDetections/countFrames)
+    print(totalDetections/countFrames)
+    totalDetections = 0
+    countFrames = 0
+    myFile.close()
 
 def Detect():
     return detect.filterData(detect.detect(True))
@@ -48,13 +57,17 @@ if __name__ == '__main__':
                     objects = objects + ","
                     print("adding a comma")
                 objects = objects + str(area[i])+ " " + str(center[i][0] )+ " "+str(center[i][1])
-                counter = counter+1
+                counter+= 1
         if (counter ==0):
             objects = "0 0 0"
         objects = objects + "\n"
+        totalDetections += counter
+        countFrames += 1
+        if countFrames >= 24000:
+            writeRecords()
         #if (done):
         print("start")
-        print(objects)
+        #print(objects)
         ser.write(objects.encode())
             #print (sys.getsizeof(out))
         
