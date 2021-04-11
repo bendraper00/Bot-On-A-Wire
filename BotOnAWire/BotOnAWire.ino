@@ -15,7 +15,7 @@ bool forward = true;
 int motorSpeed = 1500;
 bool dir_forward = true;
 int stopSpeed = 1500;
-double stopDistance = 30;
+double stopDistance = 35;
 int speedRange = 110;  //+- from 1500
 int speedSafety = 50;
 int horRange = 640;
@@ -47,6 +47,7 @@ void setup() {
   delay(5000);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
+  motorSpeed = stopSpeed+speedRange;
 }
 
 void loop() {
@@ -75,6 +76,14 @@ void loop() {
         motorSpeed = stopSpeed + speedRange;
         Serial.print("FORWARD");
         forward = true;
+      }
+      else if (forward)
+      {
+        motorSpeed = stopSpeed + speedRange;
+        }
+      else if (!forward)
+      {
+        motorSpeed = stopSpeed - speedRange;
       }
    }
    
