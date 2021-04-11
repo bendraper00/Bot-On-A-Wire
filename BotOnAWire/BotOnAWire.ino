@@ -15,7 +15,7 @@ bool forward = true;
 int motorSpeed = 1500;
 bool dir_forward = true;
 int stopSpeed = 1500;
-double stopDistance = 25;
+double stopDistance = 30;
 int speedRange = 80;  //+- from 1500
 int speedSafety = 50;
 int horRange = 640;
@@ -47,15 +47,15 @@ void setup() {
   delay(5000);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
-  //motorSpeed = stopSpeed+speedRange; // sets the inital direction
+  motorSpeed = stopSpeed+speedRange; // sets the inital direction
 }
 
 void loop() {
-  frontDist = getUltrasonicDistance(true);  //front == true
-  backDist = getUltrasonicDistance(false);
+  frontDist = getUltrasonicDistance(true)-8;  //front == true// front Dist tends to read high
+  backDist = getUltrasonicDistance(false)+8; //back dist tends to read low
   
   Serial.print(frontDist);
-  Serial.print (" ");
+  Serial.print(" ");
   Serial.println(backDist);
   //addToArray(frontDist);
   
@@ -85,16 +85,16 @@ void loop() {
    }*/
    if (state == LOOKING)
    {  
-      if (forward && frontDist <= stopDistance ) 
+      if (forward && frontDist-8 <= stopDistance ) // front Dist tends to read high
       { //if too close
       motorSpeed = stopSpeed - speedRange;
-      Serial.print("BACKWARD");
+      //Serial.print("BACKWARD");
       forward = false;
       }
-      else if (!forward && backDist <= stopDistance)
+      else if (!forward && backDist+ 8 <= stopDistance) //back dist tends to read low
       {
         motorSpeed = stopSpeed + speedRange;
-        Serial.print("FORWARD");
+        //Serial.print("FORWARD");
         forward = true;
       }
    }
