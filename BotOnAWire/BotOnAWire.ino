@@ -16,12 +16,14 @@ int motorSpeed = 1500;
 bool dir_forward = true;
 int stopSpeed = 1500;
 double stopDistance = 30;
-int speedRange = 80;  //+- from 1500
+int speedRange = 130;  //+- from 1500
+int patrollingSpeed = 80;
 int speedSafety = 50;
 int horRange = 640;
 double distanceRange = 50;
 float frontDist =0;
 float backDist =0;
+unsigned long lastDetect = 0;
 
 struct DetectObject{
   double area;
@@ -63,7 +65,7 @@ void loop() {
     motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
-   if (state == LOOKING){ // if not currently chasing
+   if (state == LOOKING && millis()-lastDetect > 1000){ // if not currently chasing
      
       if(frontDist <= stopDistance && backDist <= stopDistance ){
         Serial.print("Stopped");
@@ -77,9 +79,9 @@ void loop() {
           Serial.print("FORWARD");
           forward = true;
         }if (forward){
-          motorSpeed = stopSpeed + speedRange;
+          motorSpeed = stopSpeed + patrollingSpeed;
         }else if (!forward){
-          motorSpeed = stopSpeed - speedRange;
+          motorSpeed = stopSpeed - patrollingSpeed;
         }
       }
    }
@@ -161,6 +163,7 @@ int ReadParseSerial()
       }
       state = DETECT;
       Serial.println ("detect");
+      lastDetect = millis();
       return DetectControl(detectArray, j);
     }
     
@@ -230,8 +233,8 @@ int CalcSpeed_demo (float distance,double thetaX)
     mySpeed = stopSpeed;
     forward = !forward;
   }else{
-    mySpeed = stopSpeed + (thetaX * speedRange*2)/horRange; //calculates the speed proprtional to the position of the detection
-
+    mySpeed = stopSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection
+  
     if (mySpeed < stopSpeed - speedRange){ //limits the speed
       mySpeed = stopSpeed - speedRange;
     }else if (mySpeed > stopSpeed + speedRange){
