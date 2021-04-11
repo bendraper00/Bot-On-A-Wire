@@ -15,13 +15,13 @@ bool forward = true;
 int motorSpeed = 1500;
 bool dir_forward = true;
 int stopSpeed = 1500;
-double stopDistance = 35;
-int speedRange = 110;  //+- from 1500
+double stopDistance = 25;
+int speedRange = 80;  //+- from 1500
 int speedSafety = 50;
 int horRange = 640;
 double distanceRange = 50;
 float frontDist =0;
- float backDist =0;
+float backDist =0;
 
 struct DetectObject{
   double area;
@@ -47,7 +47,7 @@ void setup() {
   delay(5000);
   pinMode(13, OUTPUT);
   Serial.begin(19200);
-  motorSpeed = stopSpeed+speedRange;
+  //motorSpeed = stopSpeed+speedRange; // sets the inital direction
 }
 
 void loop() {
@@ -60,30 +60,27 @@ void loop() {
   //addToArray(frontDist);
   
    if (Serial.available() > 0) {
-    motorSpeed = ReadParseSerial();
+    motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
-   if (state == LOOKING)
-   {  
-      if (forward && frontDist <= stopDistance ) 
-      { //if too close
-      motorSpeed = stopSpeed - speedRange;
-      Serial.print("BACKWARD");
-      forward = false;
-      }
-      else if (!forward && backDist <= stopDistance)
-      {
-        motorSpeed = stopSpeed + speedRange;
-        Serial.print("FORWARD");
-        forward = true;
-      }
-      else if (forward)
-      {
-        motorSpeed = stopSpeed + speedRange;
+   if (state == LOOKING){ // if not currently chasing
+     
+      if(frontDist <= stopDistance && backDist <= stopDistance ){
+        Serial.print("Stopped");
+        motorSpeed = stopSpeed;
+      }else{
+        if ( frontDist <= stopDistance ){ 
+         //if too close
+          Serial.print("BACKWARD");
+          forward = false;
+        }else if ( backDist <= stopDistance){
+          Serial.print("FORWARD");
+          forward = true;
+        }if (forward){
+          motorSpeed = stopSpeed + speedRange;
+        }else if (!forward){
+          motorSpeed = stopSpeed - speedRange;
         }
-      else if (!forward)
-      {
-        motorSpeed = stopSpeed - speedRange;
       }
    }
    
@@ -124,38 +121,32 @@ int ReadParseSerial()
        
     int i =0;
     int j =0;
-    if (sRead.length() > 0)
-    {
-    while (i < sRead.length())
-    {
-      //DetectObject obj;
-      int pos = sRead.indexOf(",", i);
-      if (pos == -1 && i<sRead.length())
-      {
-        str = sRead.substring(i);
-        i = sRead.length();
+    if (sRead.length() > 0){
+      while (i < sRead.length()){
+        //DetectObject obj;
+        int pos = sRead.indexOf(",", i);
+        if (pos == -1 && i<sRead.length()){
+          str = sRead.substring(i);
+          i = sRead.length();
+        }else{
+          str = sRead.substring(i, pos);
+          i = pos+1;
+        }
+        
+        String part01 = getValue(str,' ',0);
+        String part02 = getValue(str,' ',1);
+        String part03 = getValue(str,' ',2);
+        DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
+        detectArray[j] = obj;
+        j++;
+        if (part01 == "0"){
+          state = LOOKING;
+          return motorSpeed;
+        }
       }
-      else
-      {
-      str = sRead.substring(i, pos);
-      i = pos+1;
-      }
-    
-    String part01 = getValue(str,' ',0);
-    String part02 = getValue(str,' ',1);
-    String part03 = getValue(str,' ',2);
-     DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
-     detectArray[j] = obj;
-      j++;
-      if (part01 == "0")
-      {
-        state = LOOKING;
-        return motorSpeed;
-      }
-    }
-    state = DETECT;
-    Serial.println ("detect");
-    return DetectControl(detectArray, j);
+      state = DETECT;
+      Serial.println ("detect");
+      return DetectControl(detectArray, j);
     }
     
     state = LOOKING;
@@ -195,30 +186,20 @@ double CalcDirection (double x, double y)
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
-  if (thetaX < 0) 
-  {
+  if (thetaX < 0) {
     isFront = true;
     //Serial.println ("FORWARD");
-    }
-    else
-    {
-      //Serial.println ("BACKWARD");
-    }
-  if (thetaY < 0) 
-  {
+  }
+  if (thetaY < 0) {
     isUp = true;
   }
-
-   if (isFront)
-   {
+  if (isFront){
     forward = true;
     return (CalcSpeed_demo (frontDist, thetaX));
-   }
-   else
-   {
+  }else{
     forward = false;
-   return (CalcSpeed_demo (backDist, thetaX));
-   }
+    return (CalcSpeed_demo (backDist, thetaX));
+  }
 }
 
 /**
@@ -230,25 +211,19 @@ int CalcSpeed_demo (float distance,double thetaX)
 {
   int mySpeed =0;
 
-  if (distance <= stopDistance )
-  {
+  if (distance <= stopDistance ){
     mySpeed = stopSpeed;
     forward = !forward;
-  }  
-  else
-  {
-    mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
+  }else{
+    mySpeed = stopSpeed + (thetaX * speedRange*2)/horRange; //calculates the speed proprtional to the position of the detection
 
-    if (mySpeed < stopSpeed - speedRange) 
-    {
+    if (mySpeed < stopSpeed - speedRange){ //limits the speed
       mySpeed = stopSpeed - speedRange;
-    }
-    else if (mySpeed > stopSpeed + speedRange) 
-    {
+    }else if (mySpeed > stopSpeed + speedRange){
       mySpeed = stopSpeed + speedRange;
     }
 
-    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed;
+    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed; // prevent the speed from being too low
     else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
   }
   return mySpeed;
