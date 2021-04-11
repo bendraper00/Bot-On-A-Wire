@@ -63,7 +63,7 @@ void loop() {
     motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
-   if (state == LOOKING){ // if not currently chasing
+   /*if (state == LOOKING){ // if not currently chasing
      
       if(frontDist <= stopDistance && backDist <= stopDistance ){
         Serial.print("Stopped");
@@ -81,6 +81,21 @@ void loop() {
         }else if (!forward){
           motorSpeed = stopSpeed - speedRange;
         }
+      }
+   }*/
+   if (state == LOOKING)
+   {  
+      if (forward && frontDist <= stopDistance ) 
+      { //if too close
+      motorSpeed = stopSpeed - speedRange;
+      Serial.print("BACKWARD");
+      forward = false;
+      }
+      else if (!forward && backDist <= stopDistance)
+      {
+        motorSpeed = stopSpeed + speedRange;
+        Serial.print("FORWARD");
+        forward = true;
       }
    }
    
