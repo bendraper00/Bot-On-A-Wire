@@ -62,13 +62,15 @@ float forwardDistances[arrayLength];
 bool forward = true;
 bool dir_forward = true;
 
-int motorMin = 49;
-int motorMax = 2048;
-int motorSpeed = 1048;
+int minSpeed = 49; //stop
+int maxSpeed = 2048;
+int midSpeed = 1048; //stop
+
 int stopSpeed = 1048;
 int speedRange = 130; //1000 for max
 int speedSafety = 50; //Figure this out
 int patrollingSpeed = 80; //Figure this out
+int motorSpeed = midSpeed + patrollingSpeed;
 
 double stopDistance = 30;
 int horRange = 640;
@@ -141,9 +143,9 @@ void loop() {
           //Serial.print("FORWARD");
           forward = true;
         }if (forward){
-          motorSpeed = stopSpeed + patrollingSpeed;
+          motorSpeed = minSpeed + patrollingSpeed;
         }else if (!forward){
-          motorSpeed = stopSpeed - patrollingSpeed;
+          motorSpeed = midSpeed + patrollingSpeed;
         }
       }
    }
@@ -167,7 +169,18 @@ void loop() {
   //Serial.println(motorSpeed);
 //  myESC1.speed(motorSpeed);
 //  myESC2.speed(motorSpeed);
-  setMotorSpeeds(motorSpeed);
+
+
+  setMotorSpeeds(motorSpeed); 
+//  delay(2000);
+//  setMotorSpeeds(midSpeed);
+//  delay(2000);
+//  setMotorSpeeds(midSpeed + speedRange);
+//  Serial.println(midSpeed + speedRange);
+//  delay(5000);
+  
+  
+  
   //dirSound.update();
 }
 
@@ -295,17 +308,27 @@ int CalcSpeed_demo (float distance,double thetaX)
   if (distance <= stopDistance ){
     mySpeed = stopSpeed;
     forward = !forward;
-  }else{
-    mySpeed = stopSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection
+  }
   
-    if (mySpeed < stopSpeed - speedRange){ //limits the speed
-      mySpeed = stopSpeed - speedRange;
-    }else if (mySpeed > stopSpeed + speedRange){
-      mySpeed = stopSpeed + speedRange;
+  else{
+
+    if (thetaX >0)
+    {
+      mySpeed = midSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection  
+    }
+    else if (thetaX < 0)
+    {
+      mySpeed = minSpeed + (-(thetaX * speedRange))/horRange; //calculates the speed proprtional to the position of the detection  
+    }
+   
+    if (mySpeed < minSpeed + speedRange){ //limits the speed
+      mySpeed = minSpeed + speedRange;
+    }else if (mySpeed > midSpeed + speedRange){
+      mySpeed = midSpeed + speedRange;
     }
 
-    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed; // prevent the speed from being too low
-    else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
+    if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low taht can harm motor
+    else if (mySpeed > midSpeed && mySpeed < midSpeed + speedSafety) mySpeed = stopSpeed;
   }
   return mySpeed;
 }
