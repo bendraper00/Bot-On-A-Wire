@@ -66,9 +66,9 @@ int motorMin = 49;
 int motorMax = 2048;
 int motorSpeed = 1048;
 int stopSpeed = 1048;
-int speedRange = 700; //was 1000
-int speedSafety = 0; //Figure this out
-int patrollingSpeed = 500; //Figure this out
+int speedRange = 130; //1000 for max
+int speedSafety = 50; //Figure this out
+int patrollingSpeed = 80; //Figure this out
 
 double stopDistance = 30;
 int horRange = 640;
