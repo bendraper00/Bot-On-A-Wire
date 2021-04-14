@@ -102,8 +102,8 @@ void setup() {
 //  myESC2.speed(1500);
 
   // Notice, all pins must be connected to same PORT
-  esc1.attach(8);  
-  esc2.attach(9);  
+  esc1.attach(6);  
+  esc2.attach(7);  
   pinMode(telemetryPin1, INPUT_PULLUP);
   pinMode(telemetryPin2, INPUT_PULLUP);
   setMotorSpeeds(throttle);
@@ -118,27 +118,27 @@ void loop() {
   frontDist = getUltrasonicDistance(true)-8;  //front == true// front Dist tends to read high
   backDist = getUltrasonicDistance(false)+8; //back dist tends to read low
   
-  Serial.print(frontDist);
-  Serial.print(" ");
-  Serial.println(backDist);
+//  Serial.print(frontDist);
+//  Serial.print(" ");
+//  Serial.println(backDist);
   //addToArray(frontDist);
   
    if (Serial.available() > 0) {
-    motorSpeed = ReadParseSerial(); // reading input from jetson
+    //motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
    if (state == LOOKING && millis()-lastDetect > 1000){ // if not currently chasing
      
       if(frontDist <= stopDistance && backDist <= stopDistance ){
-        Serial.print("Stopped");
+        //Serial.print("Stopped");
         motorSpeed = stopSpeed;
       }else{
         if ( frontDist <= stopDistance ){ 
          //if too close
-          Serial.print("BACKWARD");
+          //Serial.print("BACKWARD");
           forward = false;
         }else if ( backDist <= stopDistance){
-          Serial.print("FORWARD");
+          //Serial.print("FORWARD");
           forward = true;
         }if (forward){
           motorSpeed = stopSpeed + patrollingSpeed;
@@ -164,7 +164,7 @@ void loop() {
    }*/
    
 //  Serial.println(state);
-  Serial.println(motorSpeed);
+  //Serial.println(motorSpeed);
 //  myESC1.speed(motorSpeed);
 //  myESC2.speed(motorSpeed);
   setMotorSpeeds(motorSpeed);
@@ -397,17 +397,17 @@ void readAndPrintSerial() {
     float rpm1 = BitShiftCombine(inBuffer1[7], inBuffer1[8]) * 100 / 6;
     if (consumption1 == 0 && rpm1 > 0 && rpm1 < 1500) {
       //TODO test with no vision
-//      Serial.print("Motor 1: ");
-//      Serial.print("temp: ");
-//      Serial.print(temp1);
-//      Serial.print(", voltage: ");
-//      Serial.print(voltage1);
-//      Serial.print(", current: ");
-//      Serial.print(current1);
-//      Serial.print(", consumption: ");
-//      Serial.print(consumption1);
-//      Serial.print(", RPM: ");
-//      Serial.println(rpm1);
+      Serial.print("Motor 1: ");
+      Serial.print("temp: ");
+      Serial.print(temp1);
+      Serial.print(", voltage: ");
+      Serial.print(voltage1);
+      Serial.print(", current: ");
+      Serial.print(current1);
+      Serial.print(", consumption: ");
+      Serial.print(consumption1);
+      Serial.print(", RPM: ");
+      Serial.println(rpm1);
     }
     
   }
@@ -434,17 +434,17 @@ void readAndPrintSerial() {
     if (consumption2 == 0 && rpm2 > 0 && rpm2 < 1500) {
       //TODO test with no vision
       
-//      Serial.print("Motor 2: ");
-//      Serial.print("temp: ");
-//      Serial.print(temp2);
-//      Serial.print(", voltage: ");
-//      Serial.print(voltage2);
-//      Serial.print(", current: ");
-//      Serial.print(current2);
-//      Serial.print(", consumption: ");
-//      Serial.print(consumption2);
-//      Serial.print(", RPM: ");
-//      Serial.println(rpm2);
+      Serial.print("Motor 2: ");
+      Serial.print("temp: ");
+      Serial.print(temp2);
+      Serial.print(", voltage: ");
+      Serial.print(voltage2);
+      Serial.print(", current: ");
+      Serial.print(current2);
+      Serial.print(", consumption: ");
+      Serial.print(consumption2);
+      Serial.print(", RPM: ");
+      Serial.println(rpm2);
     }
   }
 }
