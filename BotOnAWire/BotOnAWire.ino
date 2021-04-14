@@ -67,9 +67,9 @@ int maxSpeed = 2048;
 int midSpeed = 1048; //stop
 
 int stopSpeed = 1048;
-int speedRange = 130; //1000 for max
+int speedRange = 200; //1000 for max
 int speedSafety = 50; //Figure this out
-int patrollingSpeed = 80; //Figure this out
+int patrollingSpeed = 200; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
 
 double stopDistance = 30;
@@ -89,9 +89,9 @@ enum CannonState {DRAWING, HOLDING};
 RobotState state = LOOKING;
 
 void setup() {
-  Serial.begin(19200);
-  mySerial1.begin(19200);
-  mySerial2.begin(19200);
+  Serial.begin(115200);
+  mySerial1.begin(115200);
+  mySerial2.begin(115200);
   
   Serial.setTimeout(10000);
   Serial.println("Hello");
@@ -312,11 +312,11 @@ int CalcSpeed_demo (float distance,double thetaX)
   
   else{
 
-    if (thetaX >0)
+    if (thetaX >0)  //go backward toward docking station -> speed = midspeed + change in speed
     {
-      mySpeed = midSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection  
+      mySpeed = midSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
     }
-    else if (thetaX < 0)
+    else if (thetaX < 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
       mySpeed = minSpeed + (-(thetaX * speedRange))/horRange; //calculates the speed proprtional to the position of the detection  
     }
