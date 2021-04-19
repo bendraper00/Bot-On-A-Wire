@@ -238,7 +238,6 @@ int ReadParseSerial()
         }
       }
       state = DETECT;
-      Serial.println ("detect");
       lastDetect = millis();
       return DetectControl(detectArray, j);
     }
@@ -387,7 +386,7 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 void setMotorSpeeds(int motorSpeed) {
   esc1.setThrottle(motorSpeed);
   esc2.setThrottle(motorSpeed);
-  readAndPrintSerial();
+  //readAndPrintSerial();  //TODO: This is the telemetry part. WIP
 }
 
 int BitShiftCombine( unsigned char x_high, unsigned char x_low)
