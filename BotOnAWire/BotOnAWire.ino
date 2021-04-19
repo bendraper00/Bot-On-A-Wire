@@ -1,5 +1,5 @@
 //#include <ESC.h>
-#include <DShot.h>
+#include "DShot.h"
 #include <SoftwareSerial.h>
 
 #include "DirectionalSound.h"
@@ -31,12 +31,12 @@ uint16_t target = 0;
 void readAndPrintSerial();
 
 typedef struct {
-    uint8_t dataAge;
-    int8_t temperature;  // C degrees
-    int16_t voltage;     // 0.01V
-    int32_t current;     // 0.01A
-    int32_t consumption; // mAh
-    int16_t rpm;         // 0.01erpm
+  uint8_t dataAge;
+  int8_t temperature;  // C degrees
+  int16_t voltage;     // 0.01V
+  int32_t current;     // 0.01A
+  int32_t consumption; // mAh
+  int16_t rpm;         // 0.01erpm
 } escSensorData_t;
 
 escSensorData_t escSensorData;
@@ -68,22 +68,22 @@ int maxSpeed = 2048;
 int midSpeed = 1048; //stop
 
 int stopSpeed = 1048;
-int speedRange = 250; //1000 for max
+int speedRange = 150; //1000 for max
 int speedSafety = 50; //Figure this out
-int patrollingSpeed = 175; //Figure this out
+int patrollingSpeed = 115; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
 
-double stopDistance = 30;
+double stopDistance = 35;
 int horRange = 640;
 double distanceRange = 50;
 MedianFilter frontDist;
 MedianFilter backDist;
 
-struct DetectObject{
+struct DetectObject {
   double area;
   double x;
-  double y; 
-  };
+  double y;
+};
 
 enum RobotState {DETECT, LOOKING};
 enum CannonState {DRAWING, HOLDING};
@@ -93,20 +93,20 @@ void setup() {
   Serial.begin(115200);
   mySerial1.begin(115200);
   mySerial2.begin(115200);
-  
+
   Serial.setTimeout(10000);
   Serial.println("Hello");
   Serial.end();
 
   //dirSound.init();
-//  myESC1.arm();
-//  myESC2.arm();
-//  myESC1.speed(1500);
-//  myESC2.speed(1500);
+  //  myESC1.arm();
+  //  myESC2.arm();
+  //  myESC1.speed(1500);
+  //  myESC2.speed(1500);
 
   // Notice, all pins must be connected to same PORT
-  esc1.attach(6);  
-  esc2.attach(7);  
+  esc1.attach(6);
+  esc2.attach(7);
   pinMode(telemetryPin1, INPUT_PULLUP);
   pinMode(telemetryPin2, INPUT_PULLUP);
   setMotorSpeeds(throttle);
@@ -118,56 +118,57 @@ void setup() {
 
 
 void loop() {
-  frontDist.push(getUltrasonicDistance(true)-8);  //front == true// front Dist tends to read high
-  backDist.push( getUltrasonicDistance(false)+8); //back dist tends to read low
-  
-//  Serial.print(frontDist);
-//  Serial.print(" ");
-//  Serial.println(backDist);
+  frontDist.push(getUltrasonicDistance(true) - 3.5); //front == true// front Dist tends to read high
+  backDist.push( getUltrasonicDistance(false) + 8); //back dist tends to read low
+
+  //  Serial.print(frontDist);
+  //  Serial.print(" ");
+  //  Serial.println(backDist);
   //addToArray(frontDist);
 
-   if (Serial.available() > 0) {
-    Serial.println("detect");
+  if (Serial.available() > 0) {
+    //Serial.println("detect\n");
     motorSpeed = ReadParseSerial(); // reading input from jetson
-   }
-   
-   if (state == LOOKING && millis()-lastDetect > 1000){ // if not currently chasing
-     
-      if(frontDist.read() <= stopDistance && backDist.read() <= stopDistance ){
-        //Serial.print("Stopped");
-        motorSpeed = stopSpeed;
-      }else{
-        if ( frontDist.read() <= stopDistance ){ 
-         //if too close
-          //Serial.print("BACKWARD");
-          forward = false;
-        }else if ( backDist.read() <= stopDistance){
-          //Serial.print("FORWARD");
-          forward = true;
-        }if (forward){
-          motorSpeed = minSpeed + patrollingSpeed;
-        }else if (!forward){
-          motorSpeed = midSpeed + patrollingSpeed;
-        }
+  }
+  Serial.print(frontDist.read());
+  Serial.print('\t');
+  Serial.println(backDist.read());
+  if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
+    if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
+      //Serial.print("Stopped");
+      motorSpeed = stopSpeed;
+    } else {
+      if ( frontDist.read() <= stopDistance ) {
+        //if too close
+        //Serial.print("BACKWARD");
+        forward = false;
+      } else if ( backDist.read() <= stopDistance) {
+        //Serial.print("FORWARD");
+        forward = true;
+      } if (forward) {
+        motorSpeed = minSpeed + patrollingSpeed;
+      } else if (!forward) {
+        motorSpeed = midSpeed + patrollingSpeed;
       }
-   }
-   
-//  Serial.println(state);
+    }
+  }
+
+  //  Serial.println(state);
   //Serial.println(motorSpeed);
-//  myESC1.speed(motorSpeed);
-//  myESC2.speed(motorSpeed);
+  //  myESC1.speed(motorSpeed);
+  //  myESC2.speed(motorSpeed);
 
 
-  setMotorSpeeds(motorSpeed); 
-//  delay(2000);
-//  setMotorSpeeds(midSpeed);
-//  delay(2000);
-//  setMotorSpeeds(midSpeed + speedRange);
-//  Serial.println(midSpeed + speedRange);
-//  delay(5000);
-  
-  
-  
+  setMotorSpeeds(motorSpeed);
+  //  delay(2000);
+  //  setMotorSpeeds(midSpeed);
+  //  delay(2000);
+  //  setMotorSpeeds(midSpeed + speedRange);
+  //  Serial.println(midSpeed + speedRange);
+  //  delay(5000);
+
+
+
   //dirSound.update();
 }
 
@@ -176,17 +177,17 @@ String getValue(String data, char separator, int index)
 {
   int found = 0;
   int strIndex[] = {0, -1};
-  int maxIndex = data.length()-1;
+  int maxIndex = data.length() - 1;
 
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
-        strIndex[0] = strIndex[1]+1;
-        strIndex[1] = (i == maxIndex) ? i+1 : i;
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
     }
   }
 
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
 /*
@@ -194,72 +195,72 @@ String getValue(String data, char separator, int index)
 */
 int ReadParseSerial()
 {
-    String sRead= Serial.readStringUntil('\n');
-    String str;
-    DetectObject detectArray[15];
-    //Serial.println(sRead);
-       
-    int i =0;
-    int j =0;
-    if (sRead.length() > 0){
-      while (i < sRead.length()){
-        //DetectObject obj;
-        int pos = sRead.indexOf(",", i);
-        if (pos == -1 && i<sRead.length()){
-          str = sRead.substring(i);
-          i = sRead.length();
-        }else{
-          str = sRead.substring(i, pos);
-          i = pos+1;
-        }
-        
-        String part01 = getValue(str,' ',0);
-        String part02 = getValue(str,' ',1);
-        String part03 = getValue(str,' ',2);
-        DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
-        detectArray[j] = obj;
-        j++;
-        if (part01 == "0"){
-          state = LOOKING;
-          return motorSpeed;
-        }
+  String sRead = Serial.readStringUntil('\n');
+  String str;
+  DetectObject detectArray[15];
+  //Serial.println(sRead);
+
+  int i = 0;
+  int j = 0;
+  if (sRead.length() > 0) {
+    while (i < sRead.length()) {
+      //DetectObject obj;
+      int pos = sRead.indexOf(",", i);
+      if (pos == -1 && i < sRead.length()) {
+        str = sRead.substring(i);
+        i = sRead.length();
+      } else {
+        str = sRead.substring(i, pos);
+        i = pos + 1;
       }
-      state = DETECT;
-      lastDetect = millis();
-      return DetectControl(detectArray, j);
+
+      String part01 = getValue(str, ' ', 0);
+      String part02 = getValue(str, ' ', 1);
+      String part03 = getValue(str, ' ', 2);
+      DetectObject obj = {part01.toDouble(), part02.toDouble(), part03.toDouble()};
+      detectArray[j] = obj;
+      j++;
+      if (part01 == "0") {
+        state = LOOKING;
+        return motorSpeed;
+      }
     }
-    
-    state = LOOKING;
-    return motorSpeed;
-  
+    state = DETECT;
+    lastDetect = millis();
+    return DetectControl(detectArray, j);
+  }
+
+  state = LOOKING;
+  return motorSpeed;
+
 }
 /**
- * For now this function will get the max area, calculate angle of camera to the closest bird
- * then determine movement left or right
- */
-int DetectControl(DetectObject detectArray[],int arraySize)
+   For now this function will get the max area, calculate angle of camera to the closest bird
+   then determine movement left or right
+*/
+int DetectControl(DetectObject detectArray[], int arraySize)
 {
-  DetectObject closestOne = {0,0,0};
-  for (int i =0; i< arraySize; i++)
+  DetectObject closestOne = {0, 0, 0};
+  for (int i = 0; i < arraySize; i++)
   {
     if (detectArray[i].area > closestOne.area)
     {
       closestOne = detectArray[i];
     }
-  } 
-  return CalcDirection(closestOne.x, closestOne.y); 
+  }
+  return CalcDirection(closestOne.x, closestOne.y);
 }
 
 /*
-Calculate the location of the detection with respect to the frame
-and return the the speed calculated from the given pixel coordinate detected
+  Calculate the location of the detection with respect to the frame
+  and return the the speed calculated from the given pixel coordinate detected
 */
 double CalcDirection (double x, double y)
 {
-  double angleToX =0;
+  double angleToX = 0;
   double centerX = 640;
   double centerY = 360;
-  double angle =0;  //do nothing for now
+  double angle = 0; //do nothing for now
   bool isUp = false;
   bool isFront = false;
 
@@ -273,43 +274,43 @@ double CalcDirection (double x, double y)
   if (thetaY < 0) {
     isUp = true;
   }
-  if (isFront){
+  if (isFront) {
     forward = true;
     return (CalcSpeed_demo (frontDist.read(), thetaX));
-  }else{
+  } else {
     forward = false;
     return (CalcSpeed_demo (backDist.read(), thetaX));
   }
 }
 
 /**
- * Calculate the speed if not close to pole
- * go forward or backward coresponding to the location of detection with respect to the frame
- * Only apply with the setup of one side camera
- */
-int CalcSpeed_demo (float distance,double thetaX)
+   Calculate the speed if not close to pole
+   go forward or backward coresponding to the location of detection with respect to the frame
+   Only apply with the setup of one side camera
+*/
+int CalcSpeed_demo (float distance, double thetaX)
 {
-  int mySpeed =0;
+  int mySpeed = 0;
 
-  if (distance <= stopDistance ){
+  if (distance <= stopDistance ) {
     mySpeed = stopSpeed;
     forward = !forward;
   }
-  
-  else{
 
-    if (thetaX >0)  //go backward toward docking station -> speed = midspeed + change in speed
+  else {
+
+    if (thetaX > 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
-      mySpeed = midSpeed + (thetaX * speedRange)/horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
+      mySpeed = midSpeed + (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
     }
     else if (thetaX < 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
-      mySpeed = minSpeed + (-(thetaX * speedRange))/horRange; //calculates the speed proprtional to the position of the detection  
+      mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
     }
-   
-    if (mySpeed < minSpeed + speedRange){ //limits the speed
+
+    if (mySpeed < minSpeed + speedRange) { //limits the speed
       mySpeed = minSpeed + speedRange;
-    }else if (mySpeed > midSpeed + speedRange){
+    } else if (mySpeed > midSpeed + speedRange) {
       mySpeed = midSpeed + speedRange;
     }
 
@@ -320,9 +321,9 @@ int CalcSpeed_demo (float distance,double thetaX)
 }
 
 /*
-Get the Ultrasnonic reading and perform conversion from analog to centimeter
-Reading from USPin1 if isFront is true meaning the robot is going forward (away from the charging station)
-Reading from USPin2 if isFront is false -> going backward (toward the charging station)
+  Get the Ultrasnonic reading and perform conversion from analog to centimeter
+  Reading from USPin1 if isFront is true meaning the robot is going forward (away from the charging station)
+  Reading from USPin2 if isFront is false -> going backward (toward the charging station)
 */
 float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 {
@@ -330,7 +331,7 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
   if (isFront) distance = analogRead(USPin1);
   else distance = analogRead(USPin2);
 
-  return (distance/1024.0)*512*2.54;
+  return (distance / 1024.0) * 512 * 2.54;
 }
 
 //void addToArray(float dist)
@@ -380,7 +381,7 @@ int BitShiftCombine( unsigned char x_high, unsigned char x_low)
 {
   int combined;
   combined = x_high;              //send x_high to rightmost 8 bits
-  combined = combined<<8;         //shift x_high over to leftmost 8 bits
+  combined = combined << 8;       //shift x_high over to leftmost 8 bits
   combined |= x_low;                 //logical OR keeps x_high intact in combined and fills in                                                             //rightmost 8 bits
   return combined;
 }
@@ -388,20 +389,20 @@ int BitShiftCombine( unsigned char x_high, unsigned char x_low)
 void readAndPrintSerial() {
   if (mySerial1.available()) {
     //String myInput = mySerial.readBytes(buffer, bufferSize);
-    uint8_t inBuffer1[bufferSize+1];
+    uint8_t inBuffer1[bufferSize + 1];
     byte bufIndx1 = 0;
-    
+
     if (mySerial1.available() > 0) {
-       while (bufIndx1 < bufferSize) {
-          inBuffer1[bufIndx1] = mySerial1.read();
-          bufIndx1 ++;
-       }
-       inBuffer1[bufIndx1] = '\0';
-       mySerial2.listen();
+      while (bufIndx1 < bufferSize) {
+        inBuffer1[bufIndx1] = mySerial1.read();
+        bufIndx1 ++;
+      }
+      inBuffer1[bufIndx1] = '\0';
+      mySerial2.listen();
     }
     float temp1 = inBuffer1[0];
-    float voltage1 = BitShiftCombine(inBuffer1[1], inBuffer1[2])/100.;
-    float current1 = BitShiftCombine(inBuffer1[3], inBuffer1[4])/100.;
+    float voltage1 = BitShiftCombine(inBuffer1[1], inBuffer1[2]) / 100.;
+    float current1 = BitShiftCombine(inBuffer1[3], inBuffer1[4]) / 100.;
     float consumption1 = BitShiftCombine(inBuffer1[5], inBuffer1[6]);
     float rpm1 = BitShiftCombine(inBuffer1[7], inBuffer1[8]) * 100 / 6;
     if (consumption1 == 0 && rpm1 > 0 && rpm1 < 1500) {
@@ -418,31 +419,31 @@ void readAndPrintSerial() {
       Serial.print(", RPM: ");
       Serial.println(rpm1);
     }
-    
+
   }
 
   mySerial2.listen();
   if (mySerial2.available()) {
     //String myInput = mySerial.readBytes(buffer, bufferSize);
-    uint8_t inBuffer2[bufferSize+1];
+    uint8_t inBuffer2[bufferSize + 1];
     byte bufIndx2 = 0;
-    
+
     if (mySerial2.available() > 0) {
-       while (bufIndx2 < bufferSize) {
-          inBuffer2[bufIndx2] = mySerial2.read();
-          bufIndx2 ++;
-       }
-       inBuffer2[bufIndx2] = '\0';
-       mySerial1.listen();
+      while (bufIndx2 < bufferSize) {
+        inBuffer2[bufIndx2] = mySerial2.read();
+        bufIndx2 ++;
+      }
+      inBuffer2[bufIndx2] = '\0';
+      mySerial1.listen();
     }
     float temp2 = inBuffer2[0];
-    float voltage2 = BitShiftCombine(inBuffer2[1], inBuffer2[2])/100.;
-    float current2 = BitShiftCombine(inBuffer2[3], inBuffer2[4])/100.;
+    float voltage2 = BitShiftCombine(inBuffer2[1], inBuffer2[2]) / 100.;
+    float current2 = BitShiftCombine(inBuffer2[3], inBuffer2[4]) / 100.;
     float consumption2 = BitShiftCombine(inBuffer2[5], inBuffer2[6]);
     float rpm2 = BitShiftCombine(inBuffer2[7], inBuffer2[8]) * 10;
     if (consumption2 == 0 && rpm2 > 0 && rpm2 < 1500) {
       //TODO test with no vision
-      
+
       Serial.print("Motor 2: ");
       Serial.print("temp: ");
       Serial.print(temp2);
