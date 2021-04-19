@@ -68,7 +68,7 @@ int maxSpeed = 2048;
 int midSpeed = 1048; //stop
 
 int stopSpeed = 1048;
-int speedRange = 150; //1000 for max
+int speedRange = 125; //1000 for max
 int speedSafety = 50; //Figure this out
 int patrollingSpeed = 115; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
@@ -299,23 +299,23 @@ int CalcSpeed_demo (float distance, double thetaX)
 
   else {
 
-    if (thetaX > 0) //go backward toward docking station -> speed = midspeed + change in speed
+    if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
       mySpeed = midSpeed + (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
     }
-    else if (thetaX < 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
+    else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
       mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
     }
 
-    if (mySpeed < minSpeed + speedRange) { //limits the speed
-      mySpeed = minSpeed + speedRange;
-    } else if (mySpeed > midSpeed + speedRange) {
+    if (mySpeed > midSpeed + speedRange) { //limits the speed
       mySpeed = midSpeed + speedRange;
+    } else if (mySpeed > minSpeed + speedRange) {
+      mySpeed = minSpeed + speedRange;
     }
 
-    if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low can harm motor
-    else if (mySpeed > midSpeed && mySpeed < midSpeed + speedSafety) mySpeed = stopSpeed;
+    if (mySpeed > midSpeed && mySpeed < midSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low can harm motor
+    else if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;
   }
   return mySpeed;
 }
