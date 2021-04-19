@@ -24,10 +24,10 @@ def Detect():
     
 if __name__ == '__main__':
     try:
-         ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=2.5)
+         ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=2.5)
     except:
         try:
-            ser = serial.Serial('/dev/ttyUSB1', 19200, timeout=2.5)
+            ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=2.5)
         except:
             print("not AMC0 or usb1")
     ser.flush()
@@ -40,8 +40,10 @@ if __name__ == '__main__':
         #print ("sending 100")
         #out = json.dumps(100) + "\n"
         #ser.write(out.encode())
-        
-        area, center = Detect()
+        line = ser.readline().decode('utf-8')
+        print(line)
+        if line != "stop":
+            area, center = Detect()
         #objects = []
         #for i in range(15):
         #    if(area[i] > 0):

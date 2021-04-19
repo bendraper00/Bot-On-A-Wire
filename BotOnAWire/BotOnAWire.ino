@@ -3,6 +3,7 @@
 #include <SoftwareSerial.h>
 
 #include "DirectionalSound.h"
+#include "MedianFilter.h"
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
@@ -67,16 +68,16 @@ int maxSpeed = 2048;
 int midSpeed = 1048; //stop
 
 int stopSpeed = 1048;
-int speedRange = 200; //1000 for max
+int speedRange = 250; //1000 for max
 int speedSafety = 50; //Figure this out
-int patrollingSpeed = 200; //Figure this out
+int patrollingSpeed = 175; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
 
 double stopDistance = 30;
 int horRange = 640;
 double distanceRange = 50;
-float frontDist =0;
- float backDist =0;
+MedianFilter frontDist;
+MedianFilter backDist;
 
 struct DetectObject{
   double area;
@@ -117,29 +118,30 @@ void setup() {
 
 
 void loop() {
-  frontDist = getUltrasonicDistance(true)-8;  //front == true// front Dist tends to read high
-  backDist = getUltrasonicDistance(false)+8; //back dist tends to read low
+  frontDist.push(getUltrasonicDistance(true)-8);  //front == true// front Dist tends to read high
+  backDist.push( getUltrasonicDistance(false)+8); //back dist tends to read low
   
 //  Serial.print(frontDist);
 //  Serial.print(" ");
 //  Serial.println(backDist);
   //addToArray(frontDist);
-  
+
    if (Serial.available() > 0) {
-    //motorSpeed = ReadParseSerial(); // reading input from jetson
+    Serial.println("detect");
+    motorSpeed = ReadParseSerial(); // reading input from jetson
    }
    
    if (state == LOOKING && millis()-lastDetect > 1000){ // if not currently chasing
      
-      if(frontDist <= stopDistance && backDist <= stopDistance ){
+      if(frontDist.read() <= stopDistance && backDist.read() <= stopDistance ){
         //Serial.print("Stopped");
         motorSpeed = stopSpeed;
       }else{
-        if ( frontDist <= stopDistance ){ 
+        if ( frontDist.read() <= stopDistance ){ 
          //if too close
           //Serial.print("BACKWARD");
           forward = false;
-        }else if ( backDist <= stopDistance){
+        }else if ( backDist.read() <= stopDistance){
           //Serial.print("FORWARD");
           forward = true;
         }if (forward){
@@ -149,21 +151,6 @@ void loop() {
         }
       }
    }
-   /*if (state == LOOKING)
-   {  
-      if (forward && frontDist-8 <= stopDistance ) // front Dist tends to read high
-      { //if too close
-      motorSpeed = stopSpeed - speedRange;
-      //Serial.print("BACKWARD");
-      forward = false;
-      }
-      else if (!forward && backDist+ 8 <= stopDistance) //back dist tends to read low
-      {
-        motorSpeed = stopSpeed + speedRange;
-        //Serial.print("FORWARD");
-        forward = true;
-      }
-   }*/
    
 //  Serial.println(state);
   //Serial.println(motorSpeed);
@@ -288,10 +275,10 @@ double CalcDirection (double x, double y)
   }
   if (isFront){
     forward = true;
-    return (CalcSpeed_demo (frontDist, thetaX));
+    return (CalcSpeed_demo (frontDist.read(), thetaX));
   }else{
     forward = false;
-    return (CalcSpeed_demo (backDist, thetaX));
+    return (CalcSpeed_demo (backDist.read(), thetaX));
   }
 }
 
@@ -326,7 +313,7 @@ int CalcSpeed_demo (float distance,double thetaX)
       mySpeed = midSpeed + speedRange;
     }
 
-    if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low taht can harm motor
+    if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low can harm motor
     else if (mySpeed > midSpeed && mySpeed < midSpeed + speedSafety) mySpeed = stopSpeed;
   }
   return mySpeed;
