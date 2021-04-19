@@ -9,7 +9,7 @@ double MedianFilter::read(){
     for(int i = 0; i < N; i++){
         sortedVals[i] = values[i];
     }
-    for(int i=1; i < N; i++){
+    for(int i=1; i < (curr<N ? curr : N); i++){
         for(int j = i; j > 0; j--){
             if(sortedVals[j-1] > sortedVals[j]){
                 double holder = sortedVals[j-1];
@@ -18,5 +18,5 @@ double MedianFilter::read(){
             }
         }
     }
-    return sortedVals[N/2];
+    return sortedVals[(curr<N ? curr : N)/2];
 }
