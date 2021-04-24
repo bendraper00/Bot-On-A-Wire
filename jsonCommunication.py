@@ -10,6 +10,7 @@ detect = detector()
 fileName = "detectRecords.txt"
 totalDetections = 0
 countFrames = 0
+detectOn = true
 #control = ControlDetection()
 def writeRecords():
     myFile = open(fileName, 'a')
@@ -18,6 +19,18 @@ def writeRecords():
     totalDetections = 0
     countFrames = 0
     myFile.close()
+
+def serialThread(ser)):
+    try:
+        line = ser.readline().decode('utf-8')
+    except:
+        line = ""
+    print(line)
+    if(line == "stop"):
+        detectOn = false
+    if(line == "go"):
+        detectOn = false
+    
 
 def Detect():
     return detect.filterData(detect.detect(True))
@@ -34,20 +47,15 @@ if __name__ == '__main__':
     out = "\n"
     ser.write(out.encode())
     done = False
-    
+    x = threading.Thread(target=thread_function, args=(ser,), daemon=True)
+    x.start()
     while True:
         #timeOld = time.time()
         #print ("sending 100")
         #out = json.dumps(100) + "\n"
         #ser.write(out.encode())
-        '''try:
-           line = ser.readline().decode('utf-8')
-        except:
-           line = ""
-        print(line)
-        if line != "stop":
-            area, center = Detect()'''
-        area, center = Detect()
+        if detectOn:
+            area, center = Detect()
         #objects = []
         #for i in range(15):
         #    if(area[i] > 0):

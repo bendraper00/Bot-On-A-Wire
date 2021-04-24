@@ -190,9 +190,7 @@ String getValue(String data, char separator, int index)
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-/*
 
-*/
 int ReadParseSerial()
 {
   String sRead = Serial.readStringUntil('\n');
@@ -291,33 +289,33 @@ double CalcDirection (double x, double y)
 int CalcSpeed_demo (float distance, double thetaX)
 {
   int mySpeed = 0;
-
+  int baseSpeed = 0;
   if (distance <= stopDistance ) {
     mySpeed = stopSpeed;
     forward = !forward;
   }
 
   else {
-
+    
     if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
-      mySpeed = midSpeed + (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
+      mySpeed =  (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
+      baseSpeed = midSpeed;
     }
     else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
       mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
+      baseSpeed = midSpeed;
     }
 
-    if (mySpeed > midSpeed + speedRange) { //limits the speed
-      mySpeed = midSpeed + speedRange;
-    } else if (mySpeed > minSpeed + speedRange) {
-      mySpeed = minSpeed + speedRange;
-    }
-
-    if (mySpeed > midSpeed && mySpeed < midSpeed + speedSafety) mySpeed = stopSpeed;  //prevent going too low can harm motor
-    else if (mySpeed > minSpeed && mySpeed < minSpeed + speedSafety) mySpeed = stopSpeed;
+    if (mySpeed >  speedRange) { //limits the speed
+      mySpeed = speedRange;
+    }else if (mySpeed <  speedSafety){
+      mySpeed = speedSafety;  //prevent going too low can harm motor
+    } 
+    
   }
-  return mySpeed;
+  return mySpeed + baseSpeed;
 }
 
 /*
