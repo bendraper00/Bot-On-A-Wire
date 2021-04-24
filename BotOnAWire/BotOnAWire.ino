@@ -129,10 +129,13 @@ void loop() {
   if (Serial.available() > 0) {
     //Serial.println("detect\n");
     motorSpeed = ReadParseSerial(); // reading input from jetson
+    if(millis()/4000 % 2 == 0 ){
+      Serial.println("stop");
+    }else{
+      Serial.println("go");
+    }
   }
-  Serial.print(frontDist.read());
-  Serial.print('\t');
-  Serial.println(backDist.read());
+  
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
     if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
       //Serial.print("Stopped");

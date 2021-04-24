@@ -5,12 +5,12 @@ import json
 import sys
 from io import StringIO
 from piVisionModels.detector import*
+import threading
 
 detect = detector()
 fileName = "detectRecords.txt"
 totalDetections = 0
 countFrames = 0
-detectOn = true
 #control = ControlDetection()
 def writeRecords():
     myFile = open(fileName, 'a')
@@ -20,16 +20,18 @@ def writeRecords():
     countFrames = 0
     myFile.close()
 
-def serialThread(ser)):
-    try:
-        line = ser.readline().decode('utf-8')
-    except:
-        line = ""
-    print(line)
-    if(line == "stop"):
-        detectOn = false
-    if(line == "go"):
-        detectOn = false
+def serialThread(ser, detectOn):
+    while True:
+        try:
+            line = ser.readline().decode('utf-8')
+        except:
+            line = "hi"
+        print(line[0:4])
+        if(line[0:4] == 'stop'):
+            detectOn = False
+        if(line[0:2] == "go"):
+            detectOn = True
+        time.sleep(1)
     
 
 def Detect():
@@ -47,15 +49,30 @@ if __name__ == '__main__':
     out = "\n"
     ser.write(out.encode())
     done = False
-    x = threading.Thread(target=thread_function, args=(ser,), daemon=True)
-    x.start()
+    detectOn = True
+    '''x = threading.Thread(target=serialThread, args=(ser,detectOn,), daemon=True)
+    x.start()''' #an attempt at multithreading with serial
     while True:
         #timeOld = time.time()
         #print ("sending 100")
         #out = json.dumps(100) + "\n"
         #ser.write(out.encode())
+        timeOld = time.time()
+        '''try:
+            #line = ser.readline().decode('utf-8') uncomment when ready to have the arduino stop detections
+        except:
+            line = ""
+        #print(line[0:4])
+        if(line[0:4] == 'stop'):
+            detectOn = False
+        if(line[0:2] == "go"):
+            detectOn = True'''
         if detectOn:
             area, center = Detect()
+            print(1/(time.time()-timeOld))
+        else:
+           area = [0 ,0, 0 , 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 , 0, 0 ,0 ,0]
+           center = [0 ,0, 0 , 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 , 0, 0 ,0 ,0]
         #objects = []
         #for i in range(15):
         #    if(area[i] > 0):
