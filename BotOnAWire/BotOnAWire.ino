@@ -148,10 +148,11 @@ void loop() {
       } else if ( backDist.read() <= stopDistance) {
         //Serial.print("FORWARD");
         forward = true;
-      } if (forward) {
-        motorSpeed = minSpeed + patrollingSpeed;
+      } 
+      if (forward) {
+        motorSpeed =  patrollingSpeed;
       } else if (!forward) {
-        motorSpeed = midSpeed + patrollingSpeed;
+        motorSpeed = patrollingSpeed;
       }
     }
   }
@@ -303,12 +304,12 @@ int CalcSpeed_demo (float distance, double thetaX)
     if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
       mySpeed =  (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
-      baseSpeed = midSpeed;
+      forward = true;
     }
     else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
       mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
-      baseSpeed = midSpeed;
+      forward = false;
     }
 
     if (mySpeed >  speedRange) { //limits the speed
@@ -318,7 +319,7 @@ int CalcSpeed_demo (float distance, double thetaX)
     } 
     
   }
-  return mySpeed + baseSpeed;
+  return mySpeed;
 }
 
 /*
@@ -372,10 +373,15 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 
 
 /* set motor speed for DShot */
-void setMotorSpeeds(int motorSpeed) {
-  esc1.setThrottle(motorSpeed);
-  esc2.setThrottle(motorSpeed);
-  readAndPrintSerial();  //TODO: This is the telemetry part. WIP
+void setMotorSpeeds(int motorSpeed, bool forward) {
+  if(motorSpeed != stopSpeed){
+    esc1.setThrottle(motorSpeed + forward?midSpeed:minSpeed);
+    esc2.setThrottle(motorSpeed + forward?minSpeed:midSpeed);
+  }else{
+    esc1.setThrottle(motorSpeed);
+    esc2.setThrottle(motorSpeed);
+  }
+  //readAndPrintSerial();  //TODO: This is the telemetry part. WIP
 }
 
 int BitShiftCombine( unsigned char x_high, unsigned char x_low)
