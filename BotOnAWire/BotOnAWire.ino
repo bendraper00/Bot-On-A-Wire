@@ -70,7 +70,7 @@ int midSpeed = 1048; //stop
 int stopSpeed = 1048;
 int speedRange = 125; //1000 for max
 int speedSafety = 50; //Figure this out
-int patrollingSpeed = 115; //Figure this out
+int patrollingSpeed = 120; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
 
 double stopDistance = 35;
@@ -375,7 +375,7 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 void setMotorSpeeds(int motorSpeed) {
   esc1.setThrottle(motorSpeed);
   esc2.setThrottle(motorSpeed);
-  //readAndPrintSerial();  //TODO: This is the telemetry part. WIP
+  readAndPrintSerial();  //TODO: This is the telemetry part. WIP
 }
 
 int BitShiftCombine( unsigned char x_high, unsigned char x_low)
