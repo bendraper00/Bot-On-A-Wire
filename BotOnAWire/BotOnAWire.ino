@@ -8,9 +8,7 @@
 #define USPin1 A0  //front
 #define USPin2 A2    //back
 #define arrayLength 10
-void setMotorSpeeds(int motorSpeed, bool);
-float getUltrasonicDistance(bool);
-int ReadParseSerial();
+
 //ESC myESC1 (8, 1000, 2000, 2000);
 //ESC myESC2 (9, 1000, 2000, 2000);
 
@@ -111,8 +109,7 @@ void setup() {
   esc2.attach(7);
   pinMode(telemetryPin1, INPUT_PULLUP);
   pinMode(telemetryPin2, INPUT_PULLUP);
-  esc1.setThrottle(throttle);
-  esc2.setThrottle(throttle);
+  setMotorSpeeds(throttle);
   delay(5000);
 
   pinMode(13, OUTPUT);
@@ -132,7 +129,12 @@ void loop() {
   if (Serial.available() > 0) {
     //Serial.println("detect\n");
     motorSpeed = ReadParseSerial(); // reading input from jetson
+    if(millis()/4000 % 2 == 0 ){
+      Serial.println("stop");
+    }else{
+      Serial.println("go");
     }
+  }
   
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
     if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
@@ -141,13 +143,16 @@ void loop() {
     } else {
       if ( frontDist.read() <= stopDistance ) {
         //if too close
-        Serial.print("BACKWARD");
+        //Serial.print("BACKWARD");
         forward = false;
       } else if ( backDist.read() <= stopDistance) {
-        Serial.print("FORWARD");
+        //Serial.print("FORWARD");
         forward = true;
-      } 
-      motorSpeed = patrollingSpeed;
+      } if (forward) {
+        motorSpeed = minSpeed + patrollingSpeed;
+      } else if (!forward) {
+        motorSpeed = midSpeed + patrollingSpeed;
+      }
     }
   }
 
@@ -157,7 +162,7 @@ void loop() {
   //  myESC2.speed(motorSpeed);
 
 
-  setMotorSpeeds(motorSpeed,forward);
+  setMotorSpeeds(motorSpeed);
   //  delay(2000);
   //  setMotorSpeeds(midSpeed);
   //  delay(2000);
@@ -297,13 +302,13 @@ int CalcSpeed_demo (float distance, double thetaX)
     
     if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
-      mySpeed =  -(thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
-      forward = false;
+      mySpeed =  (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
+      baseSpeed = midSpeed;
     }
     else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
-      mySpeed = ((thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
-      forward = true;
+      mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
+      baseSpeed = midSpeed;
     }
 
     if (mySpeed >  speedRange) { //limits the speed
@@ -313,7 +318,7 @@ int CalcSpeed_demo (float distance, double thetaX)
     } 
     
   }
-  return mySpeed;
+  return mySpeed + baseSpeed;
 }
 
 /*
@@ -367,15 +372,9 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 
 
 /* set motor speed for DShot */
-void setMotorSpeeds(int motorSpeed, bool forward) {
-  if(motorSpeed != stopSpeed){
-    int speed1 =motorSpeed + forward?minSpeed:midSpeed, speed2 =motorSpeed+ forward?midSpeed:minSpeed;
-    esc1.setThrottle(speed1);
-    esc2.setThrottle(speed2);
-  }else{
-    esc1.setThrottle(motorSpeed);
-    esc2.setThrottle(motorSpeed);
-  }
+void setMotorSpeeds(int motorSpeed) {
+  esc1.setThrottle(motorSpeed);
+  esc2.setThrottle(motorSpeed);
   readAndPrintSerial();  //TODO: This is the telemetry part. WIP
 }
 
