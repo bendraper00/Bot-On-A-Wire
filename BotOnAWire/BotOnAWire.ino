@@ -302,13 +302,13 @@ int CalcSpeed_demo (float distance, double thetaX)
     
     if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
-      mySpeed =  (thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
-      baseSpeed = midSpeed;
+      mySpeed =  -(thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
+      baseSpeed = minSpeed;
     }
     else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
-      mySpeed = minSpeed + (-(thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
-      baseSpeed = midSpeed;
+      mySpeed =  ((thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
+      baseSpeed = midspeed;
     }
 
     if (mySpeed >  speedRange) { //limits the speed
