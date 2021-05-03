@@ -64,14 +64,14 @@ float forwardDistances[arrayLength];
 bool forward = true;
 bool dir_forward = true;
 
-int minSpeed = 49; //stop
+int minSpeed = 49; 
 int maxSpeed = 2048;
 int midSpeed = 1048; //stop
 
 int stopSpeed = 1048;
-int speedRange = 125; //1000 for max
+int speedRange = 200; //1000 for max
 int speedSafety = 50; //Figure this out
-int patrollingSpeed = 120; //Figure this out
+int patrollingSpeed = 105; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
 
 double stopDistance = 35;
@@ -119,7 +119,7 @@ void setup() {
 
 
 void loop() {
-  frontDist.push(getUltrasonicDistance(true) - 3.5); //front == true// front Dist tends to read high
+  frontDist.push(getUltrasonicDistance(true) -2.5 ); //front == true// front Dist tends to read high
   backDist.push( getUltrasonicDistance(false) + 8); //back dist tends to read low
 
   //  Serial.print(frontDist);
@@ -155,6 +155,7 @@ void loop() {
         motorSpeed = midSpeed + patrollingSpeed;
       }
     }
+    motorSpeed = stopSpeed; // remove this if things arent working later
   }
 
   //  Serial.println(state);
@@ -264,13 +265,13 @@ double CalcDirection (double x, double y)
   double centerY = 360;
   double angle = 0; //do nothing for now
   bool isUp = false;
-  bool isFront = false;
+  bool isFront = true;
 
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
   if (thetaX < 0) {
-    isFront = true;
+    isFront = false;
     //Serial.println ("FORWARD");
   }
   if (thetaY < 0) {
@@ -304,19 +305,20 @@ int CalcSpeed_demo (float distance, double thetaX)
     if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
     {
       mySpeed =  -(thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
-      baseSpeed = minSpeed;
+      baseSpeed = midSpeed;
     }
     else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
     {
       mySpeed =  ((thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
-      baseSpeed = midSpeed;
+      baseSpeed = minSpeed;
     }
 
-    if (mySpeed >  speedRange) { //limits the speed
-      mySpeed = speedRange;
-    }else if (mySpeed <  speedSafety){
-      mySpeed = speedSafety;  //prevent going too low can harm motor
-    } 
+   if (mySpeed <  speedSafety){
+      mySpeed = 0;  //prevent going too low can harm motor
+      baseSpeed = stopSpeed;
+    }else if(mySpeed > 150){
+      mySpeed = 150;
+    }
     
   }
   return mySpeed + baseSpeed;
