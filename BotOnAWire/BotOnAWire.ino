@@ -7,6 +7,7 @@
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
+#define lightsPin 6
 #define arrayLength 10
 
 //ESC myESC1 (8, 1000, 2000, 2000);
