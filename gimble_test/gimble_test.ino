@@ -4,8 +4,8 @@
 #define YENCB 3
 #define PENCA 0
 #define PENCB 1
-#define LIMITPITCH 4
-#define LIMITYAW 11
+#define LIMITPITCH 11
+#define LIMITYAW 4
 #define AIN1 13
 #define BIN1 8
 #define AIN2 6
@@ -40,41 +40,60 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(YENCB), isrY, CHANGE);
   attachInterrupt(digitalPinToInterrupt(PENCA), isrP, CHANGE);
   attachInterrupt(digitalPinToInterrupt(PENCB), isrP, CHANGE);
-  Serial.begin(9600);
+  pinMode(LIMITPITCH, INPUT_PULLUP);
+  pinMode(LIMITYAW, INPUT_PULLUP);
+  //Serial.begin(9600);
+  while(digitalRead(LIMITPITCH) != LOW){
+    pitchMotor.drive(200);
+  }
+  pitchMotor.drive(0);
+  pitchCount = 0;
+  while(digitalRead(LIMITYAW) != LOW){
+    yawMotor.drive(-180);
+  }
+  yawMotor.drive(0);
+  yawCount = 0;
 }
-int timeOld = millis();
-double target = 0;
+unsigned long timeOld = millis();
+double targetY = 0, targetP = 0;
 bool inc = true;
+double cycleTime = 4;
+double dpsYaw = 225/cycleTime;
+double dpsPitch = 90/cycleTime;
 void loop() {
-  /*if(millis() - timeOld > 50){
-    target += inc?0.1:-0.1;
+  if (millis() - timeOld < cycleTime*1000){
+    targetY = dpsYaw*(millis() - timeOld)/1000.0;
+    targetP = dpsPitch*(millis() - timeOld)/1000.0;
+  }else if(millis() - timeOld < cycleTime*2000){
+    targetY = 225 - dpsYaw*(millis() - (timeOld + cycleTime*1000))/1000.0;
+    targetP = 90 - dpsPitch*(millis() - (timeOld + cycleTime*1000))/1000.0;
+  }else{
     timeOld = millis();
   }
-  if(target > 225 || target < 0) inc = !inc;
-  PIyaw(target);*/
-  Serial.print(target);
-  Serial.print(" ");
-  Serial.println(((double)yawCount)/YCPR*360);
-    
+  PIyaw(targetY);
+  PIpitch(targetP);
 }
 void PIyaw(double angle){
   const double P = 100, I = 0;
   static double cError = 0;
-  if( angle < 0 || angle > 225)
+  if( angle < 0 || angle > 225){
+    yawMotor.drive(0);
     return;
-  double error = ((double)yawCount)/YCPR*360 - angle
-  ;
+  }
+  double error = angle - ((double)yawCount)/YCPR*360;
   cError += error;
   yawMotor.drive(constrain(error*P+cError*I,-255,255));
 }
 void PIpitch(double angle){
   const double P = 100, I = 0;
   static double cError = 0;
-  if( angle < 0 || angle > 225)
+  if( angle < 0 || angle > 90){
+    pitchMotor.drive(0);
     return;
-  double error = ((double)pitchCount)/PCPR*360 - angle;
+  }
+  double error = angle -((double)pitchCount)/PCPR*360;
   cError += error;
-  pitchMotor.drive(constrain(error*P+cError*I,-255,255));
+  pitchMotor.drive(constrain(-1*(error*P+cError*I),-255,255));
 }
 
 void isrY(){
