@@ -1,13 +1,13 @@
 //#include <ESC.h>
 #include "DShot.h"
 #include <SoftwareSerial.h>
+#include "Lights.h"
 
 #include "DirectionalSound.h"
 #include "MedianFilter.h"
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
-#define lightsPin 11
 #define arrayLength 10
 
 //ESC myESC1 (8, 1000, 2000, 2000);
@@ -44,6 +44,8 @@ escSensorData_t escSensorData;
 
 
 DirectionalSound dirSound;
+Lights strobe;
+
 
 
 //bool forward = true;
@@ -115,8 +117,8 @@ void setup() {
   delay(5000);
 
   pinMode(13, OUTPUT);
-  //pinMode(lightsPin, OUTPUT);
   Serial.begin(19200);
+  strobe.init()
 }
 
 
@@ -183,9 +185,9 @@ void loop() {
     }
   }
   if(state == DETECT){
-    analogWrite(lightsPin, 255);
+    lights.on()
   }else{
-    analogWrite(lightsPin, 0);
+    lights.off()
   }
     
   //  Serial.println(state);
@@ -193,7 +195,7 @@ void loop() {
   //  myESC1.speed(motorSpeed);
   //  myESC2.speed(motorSpeed);
 
-
+  lights.update();
   setMotorSpeeds(motorSpeed);
   //  delay(2000);
   //  setMotorSpeeds(midSpeed);
