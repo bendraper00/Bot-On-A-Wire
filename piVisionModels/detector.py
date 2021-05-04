@@ -30,7 +30,7 @@ class detector:
 		areas = []
 		centers = []
 		distFromEdge = 5
-		fractOfFrame = 0.75
+		fractOfFrame = 0.6
 		for i in detections:
 			ymin = i.Top
 			xmin = i.Left

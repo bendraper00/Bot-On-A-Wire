@@ -118,17 +118,17 @@ void setup() {
 
   pinMode(13, OUTPUT);
   Serial.begin(19200);
-  strobe.init()
+  strobe.init();
 }
 
 
 void loop() {
-  frontDist.push(getUltrasonicDistance(true) -2.5 ); //front == true// front Dist tends to read high
+  frontDist.push(getUltrasonicDistance(true) +6 ); //front == true// front Dist tends to read high
   backDist.push( getUltrasonicDistance(false) + 8); //back dist tends to read low
 
-  //  Serial.print(frontDist);
-  //  Serial.print(" ");
-  //  Serial.println(backDist);
+ /*   Serial.print(frontDist.read());
+   Serial.print(" ");
+    Serial.println(backDist.read());*/
   //addToArray(frontDist);
   if(voltage > 0 && voltage < 9.7){
     state = GOHOME;
@@ -145,6 +145,7 @@ void loop() {
   
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
     //webcam = !webcam;
+    strobe.off();
     if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
       //Serial.print("Stopped");
       motorSpeed = stopSpeed;
@@ -162,9 +163,9 @@ void loop() {
         motorSpeed = midSpeed + patrollingSpeed;
       }
     }
-    motorSpeed = stopSpeed; // remove this if things arent working later
     lastInput = millis();
   }else if (state == GOHOME){
+    strobe.off();
     if(!backDist.read() >= stopDistance){
       motorSpeed = midSpeed + patrollingSpeed;
       forward = false;
@@ -180,14 +181,13 @@ void loop() {
       }
     }
   }else if (state == CHARGING){
+    strobe.off();
     if(lastInput - millis() < 10000){// wait 10 seconds after docking since we aren't really charging yet
       state = LOOKING;
     }
   }
   if(state == DETECT){
-    lights.on()
-  }else{
-    lights.off()
+    strobe.on();
   }
     
   //  Serial.println(state);
@@ -195,7 +195,7 @@ void loop() {
   //  myESC1.speed(motorSpeed);
   //  myESC2.speed(motorSpeed);
 
-  lights.update();
+  strobe.flash();
   setMotorSpeeds(motorSpeed);
   //  delay(2000);
   //  setMotorSpeeds(midSpeed);
