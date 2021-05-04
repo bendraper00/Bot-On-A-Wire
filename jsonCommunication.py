@@ -42,9 +42,9 @@ if __name__ == '__main__':
          ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=2.5)
     except:
         try:
-            ser = serial.Serial('/dev/ttyUSB1', 19200, timeout=2.5)
+            ser = serial.Serial('/dev/ttyACM0', 19200, timeout=2.5)
         except:
-            print("not AMC0 or usb1")
+            print("not ACM0 or usb1")
     ser.flush()
     out = "\n"
     ser.write(out.encode())

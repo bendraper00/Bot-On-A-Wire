@@ -3,7 +3,7 @@
 
 class MedianFilter{
     private:
-        static const int N = 5;
+        static const int N = 11;
         double values[N];
         unsigned int curr = 0;
     public:
