@@ -7,7 +7,7 @@
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
-#define lightsPin 6
+#define lightsPin 9
 #define arrayLength 10
 
 //ESC myESC1 (8, 1000, 2000, 2000);
@@ -58,7 +58,7 @@ DirectionalSound dirSound;
 //double distanceRange = 50;
 //float frontDist =0;
 //float backDist =0;
-
+bool webcam = true;
 unsigned long lastDetect = 0;
 float forwardDistances[arrayLength];
 bool forward = true;
@@ -73,10 +73,11 @@ int speedRange = 200; //1000 for max
 int speedSafety = 50; //Figure this out
 int patrollingSpeed = 105; //Figure this out
 int motorSpeed = midSpeed + patrollingSpeed;
-
+double voltage = -1;
 double stopDistance = 35;
 int horRange = 640;
 double distanceRange = 50;
+unsigned int lastInput = 0;
 MedianFilter frontDist;
 MedianFilter backDist;
 
@@ -86,8 +87,8 @@ struct DetectObject {
   double y;
 };
 
-enum RobotState {DETECT, LOOKING};
-enum CannonState {DRAWING, HOLDING};
+enum RobotState {DETECT, LOOKING, GOHOME, CHARGING};
+//enum CannonState {DRAWING, HOLDING};
 RobotState state = LOOKING;
 
 void setup() {
@@ -126,15 +127,17 @@ void loop() {
   //  Serial.print(" ");
   //  Serial.println(backDist);
   //addToArray(frontDist);
+  if(voltage > 0 && voltage < 9.7){
+    state = GOHOME;
+  }
 
   if (Serial.available() > 0) {
     //Serial.println("detect\n");
+    
+    Serial.print("go ");
+    Serial.println(webcam);
+    
     motorSpeed = ReadParseSerial(); // reading input from jetson
-    if(millis()/4000 % 2 == 0 ){
-      Serial.println("stop");
-    }else{
-      Serial.println("go");
-    }
   }
   
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
@@ -156,6 +159,31 @@ void loop() {
       }
     }
     motorSpeed = stopSpeed; // remove this if things arent working later
+    lastInput = millis();
+  }else if (state == GOHOME){
+    if(!backDist.read() >= stopDistance){
+      motorSpeed = midSpeed + patrollingSpeed;
+      forward = false;
+      lastInput = millis();
+    }else{
+      if(lastInput- millis() < 2000){ // just continue moving towards the docking station for 2 secs untill we have docking station detection
+        motorSpeed = midSpeed + patrollingSpeed*0.75;
+      }else{
+        motorSpeed = stopSpeed;
+        forward = true;
+        state = CHARGING;
+        lastInput = millis();
+      }
+    }
+  }else if (state == CHARGING){
+    if(lastInput - millis() < 10000){// wait 10 seconds after docking since we aren't really charging yet
+      state = LOOKING;
+    }
+  }
+  if(state == DETECT){
+    analogWrite(lightsPin, 128);
+  }else{
+    analogWrite(lightsPin, 0);
   }
 
   //  Serial.println(state);
@@ -270,6 +298,9 @@ double CalcDirection (double x, double y)
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
+  if(!webcam){
+    thetaX = -1*thetaX;
+  }
   if (thetaX < 0) {
     isFront = false;
     //Serial.println ("FORWARD");
@@ -411,17 +442,18 @@ void readAndPrintSerial() {
     float rpm1 = BitShiftCombine(inBuffer1[7], inBuffer1[8]) * 100 / 6;
     if (consumption1 == 0 && rpm1 > 0 && rpm1 < 1500) {
       //TODO test with no vision
-      Serial.print("Motor 1: ");
+      /*Serial.print("Motor 1: ");
       Serial.print("temp: ");
       Serial.print(temp1);
       Serial.print(", voltage: ");
-      Serial.print(voltage1);
-      Serial.print(", current: ");
+      Serial.print(voltage1);*/
+      voltage = voltage1;
+      /*Serial.print(", current: ");
       Serial.print(current1);
       Serial.print(", consumption: ");
       Serial.print(consumption1);
       Serial.print(", RPM: ");
-      Serial.println(rpm1);
+      Serial.println(rpm1);*/
     }
 
   }
@@ -448,17 +480,18 @@ void readAndPrintSerial() {
     if (consumption2 == 0 && rpm2 > 0 && rpm2 < 1500) {
       //TODO test with no vision
 
-      Serial.print("Motor 2: ");
+      /*Serial.print("Motor 2: ");
       Serial.print("temp: ");
       Serial.print(temp2);
       Serial.print(", voltage: ");
-      Serial.print(voltage2);
-      Serial.print(", current: ");
+      Serial.print(voltage2);*/
+      voltage = (voltage + voltage2)/2
+      /*Serial.print(", current: ");
       Serial.print(current2);
       Serial.print(", consumption: ");
       Serial.print(consumption2);
       Serial.print(", RPM: ");
-      Serial.println(rpm2);
+      Serial.println(rpm2);*/
     }
   }
 }

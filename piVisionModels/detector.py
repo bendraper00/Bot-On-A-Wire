@@ -2,7 +2,7 @@ import jetson.utils
 
 
 camera = jetson.utils.videoSource("/dev/video0")#/home/jetson/test.mp4", argv=["--input-codec=mpeg4"])
-#camera1 = jetson.utils.videoSource("/dev/video1")
+camera1 = jetson.utils.videoSource("/dev/video1")
 #display = jetson.utils.videoOutput("liveTest.mp4") 
 
 import jetson.inference
@@ -17,9 +17,9 @@ class detector:
 	def detect(self,webcam):
 		frame = None
 		if webcam:
+			frame = camera1.Capture()
+		else:
 			frame = camera.Capture()
-		#else:
-			#where the other input would go.
 		captures = []
 		if frame:
 			captures = net.Detect(frame)

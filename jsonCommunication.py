@@ -11,7 +11,7 @@ detect = detector()
 fileName = "detectRecords.txt"
 totalDetections = 0
 countFrames = 0
-#control = ControlDetection()
+
 def writeRecords():
     myFile = open(fileName, 'a')
     myFile.write(totalDetections/countFrames)
@@ -34,8 +34,8 @@ def serialThread(ser, detectOn):
         time.sleep(1)
     
 
-def Detect():
-    return detect.filterData(detect.detect(True))
+def Detect(webcam):
+    return detect.filterData(detect.detect(webcam))
     
 if __name__ == '__main__':
     try:
@@ -58,17 +58,19 @@ if __name__ == '__main__':
         #out = json.dumps(100) + "\n"
         #ser.write(out.encode())
         timeOld = time.time()
-        '''try:
-            #line = ser.readline().decode('utf-8') uncomment when ready to have the arduino stop detections
+        try:
+            line = ser.readline().decode('utf-8') uncomment when ready to have the arduino stop detections
         except:
             line = ""
-        #print(line[0:4])
+        print(line)
+        webcam = True
         if(line[0:4] == 'stop'):
             detectOn = False
         if(line[0:2] == "go"):
-            detectOn = True'''
+            detectOn = True
+            webcam = line[3:4] == "1"
         if detectOn:
-            area, center = Detect()
+            area, center = Detect(webcam)
             print(1/(time.time()-timeOld))
         else:
            area = [0 ,0, 0 , 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 , 0, 0 ,0 ,0]
