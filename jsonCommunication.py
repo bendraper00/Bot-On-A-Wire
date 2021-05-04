@@ -59,7 +59,7 @@ if __name__ == '__main__':
         #ser.write(out.encode())
         timeOld = time.time()
         try:
-            line = ser.readline().decode('utf-8') uncomment when ready to have the arduino stop detections
+            line = ser.readline().decode('utf-8')
         except:
             line = ""
         print(line)

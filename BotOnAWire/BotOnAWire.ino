@@ -7,7 +7,7 @@
 
 #define USPin1 A0  //front
 #define USPin2 A2    //back
-#define lightsPin 9
+#define lightsPin 11
 #define arrayLength 10
 
 //ESC myESC1 (8, 1000, 2000, 2000);
@@ -115,6 +115,7 @@ void setup() {
   delay(5000);
 
   pinMode(13, OUTPUT);
+  //pinMode(lightsPin, OUTPUT);
   Serial.begin(19200);
 }
 
@@ -141,6 +142,7 @@ void loop() {
   }
   
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
+    //webcam = !webcam;
     if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
       //Serial.print("Stopped");
       motorSpeed = stopSpeed;
@@ -181,11 +183,11 @@ void loop() {
     }
   }
   if(state == DETECT){
-    analogWrite(lightsPin, 128);
+    analogWrite(lightsPin, 255);
   }else{
     analogWrite(lightsPin, 0);
   }
-
+    
   //  Serial.println(state);
   //Serial.println(motorSpeed);
   //  myESC1.speed(motorSpeed);
@@ -485,7 +487,7 @@ void readAndPrintSerial() {
       Serial.print(temp2);
       Serial.print(", voltage: ");
       Serial.print(voltage2);*/
-      voltage = (voltage + voltage2)/2
+      voltage = (voltage + voltage2)/2;
       /*Serial.print(", current: ");
       Serial.print(current2);
       Serial.print(", consumption: ");
