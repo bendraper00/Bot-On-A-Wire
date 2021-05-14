@@ -1,5 +1,4 @@
-//#include <ESC.h>
-#include "DShot.h"
+#include <ESC.h>
 #include <SoftwareSerial.h>
 #include "Lights.h"
 
@@ -10,75 +9,29 @@
 #define USPin2 A2    //back
 #define arrayLength 10
 
-//ESC myESC1 (8, 1000, 2000, 2000);
-//ESC myESC2 (9, 1000, 2000, 2000);
-
-DShot esc1;
-DShot esc2;
-
-SoftwareSerial mySerial2(4, 5); // RX, TX
-SoftwareSerial mySerial1(2, 3); // RX, TX
-
-const byte telemetryPin1 = 2;
-const byte telemetryPin2 = 2;
-volatile byte st = LOW;
-
-static volatile uint8_t *buffer;
-#define bufferSize 10
-
-uint16_t throttle = 0;
-uint16_t target = 0;
-
-void readAndPrintSerial();
-
-typedef struct {
-  uint8_t dataAge;
-  int8_t temperature;  // C degrees
-  int16_t voltage;     // 0.01V
-  int32_t current;     // 0.01A
-  int32_t consumption; // mAh
-  int16_t rpm;         // 0.01erpm
-} escSensorData_t;
-
-escSensorData_t escSensorData;
+ESC myESC1 (8, 1000, 2000, 2000);
+ESC myESC2 (9, 1000, 2000, 2000);
 
 
 DirectionalSound dirSound;
 Lights strobe;
 
 
+int motorSpeed = 1500;
+int stopSpeed = 1500;
+double stopDistance = 30;
+int speedRange = 130;  //+- from 1500
+int patrollingSpeed = 80;
+int speedSafety = 50;
+int horRange = 640;
+double distanceRange = 50;
 
-//bool forward = true;
-//int motorSpeed = 1500;
-//bool dir_forward = true;
-//int stopSpeed = 1500;
-//double stopDistance = 30;
-//int speedRange = 130;  //+- from 1500
-//int patrollingSpeed = 80;
-//int speedSafety = 50;
-//int horRange = 640;
-//double distanceRange = 50;
-//float frontDist =0;
-//float backDist =0;
 bool webcam = true;
 unsigned long lastDetect = 0;
 float forwardDistances[arrayLength];
 bool forward = true;
 bool dir_forward = true;
 
-int minSpeed = 49; 
-int maxSpeed = 2048;
-int midSpeed = 1048; //stop
-
-int stopSpeed = 1048;
-int speedRange = 200; //1000 for max
-int speedSafety = 50; //Figure this out
-int patrollingSpeed = 105; //Figure this out
-int motorSpeed = midSpeed + patrollingSpeed;
-double voltage = -1;
-double stopDistance = 35;
-int horRange = 640;
-double distanceRange = 50;
 unsigned int lastInput = 0;
 MedianFilter frontDist;
 MedianFilter backDist;
@@ -95,25 +48,15 @@ RobotState state = LOOKING;
 
 void setup() {
   Serial.begin(115200);
-  mySerial1.begin(115200);
-  mySerial2.begin(115200);
-
   Serial.setTimeout(10000);
   Serial.println("Hello");
   Serial.end();
 
-  //dirSound.init();
-  //  myESC1.arm();
-  //  myESC2.arm();
-  //  myESC1.speed(1500);
-  //  myESC2.speed(1500);
-
-  // Notice, all pins must be connected to same PORT
-  esc1.attach(6);
-  esc2.attach(7);
-  pinMode(telemetryPin1, INPUT_PULLUP);
-  pinMode(telemetryPin2, INPUT_PULLUP);
-  setMotorSpeeds(throttle);
+  dirSound.init();
+  myESC1.arm();
+  myESC2.arm();
+  myESC1.speed(1500);
+  myESC2.speed(1500);
   delay(5000);
 
   pinMode(13, OUTPUT);
@@ -130,9 +73,9 @@ void loop() {
    Serial.print(" ");
     Serial.println(backDist.read());*/
   //addToArray(frontDist);
-  if(voltage > 0 && voltage < 9.7){
-    state = GOHOME;
-  }
+//  if(voltage > 0 && voltage < 9.7){
+//    state = GOHOME;
+//  }
 
   if (Serial.available() > 0) {
     //Serial.println("detect\n");
@@ -158,21 +101,21 @@ void loop() {
         //Serial.print("FORWARD");
         forward = true;
       } if (forward) {
-        motorSpeed = minSpeed + patrollingSpeed;
+        motorSpeed = stopSpeed + patrollingSpeed;
       } else if (!forward) {
-        motorSpeed = midSpeed + patrollingSpeed;
+        motorSpeed = stopSpeed - patrollingSpeed;
       }
     }
     lastInput = millis();
   }else if (state == GOHOME){
     strobe.off();
     if(!backDist.read() >= stopDistance){
-      motorSpeed = midSpeed + patrollingSpeed;
+      motorSpeed = stopSpeed + patrollingSpeed;
       forward = false;
       lastInput = millis();
     }else{
       if(lastInput- millis() < 2000){ // just continue moving towards the docking station for 2 secs untill we have docking station detection
-        motorSpeed = midSpeed + patrollingSpeed*0.75;
+        motorSpeed = stopSpeed - patrollingSpeed*0.75;
       }else{
         motorSpeed = stopSpeed;
         forward = true;
@@ -192,20 +135,10 @@ void loop() {
     
   //  Serial.println(state);
   //Serial.println(motorSpeed);
-  //  myESC1.speed(motorSpeed);
-  //  myESC2.speed(motorSpeed);
+    myESC1.speed(motorSpeed);
+    myESC2.speed(motorSpeed);
 
   strobe.flash();
-  setMotorSpeeds(motorSpeed);
-  //  delay(2000);
-  //  setMotorSpeeds(midSpeed);
-  //  delay(2000);
-  //  setMotorSpeeds(midSpeed + speedRange);
-  //  Serial.println(midSpeed + speedRange);
-  //  delay(5000);
-
-
-
   //dirSound.update();
 }
 
@@ -328,35 +261,29 @@ double CalcDirection (double x, double y)
 */
 int CalcSpeed_demo (float distance, double thetaX)
 {
-  int mySpeed = 0;
-  int baseSpeed = 0;
-  if (distance <= stopDistance ) {
-    mySpeed = stopSpeed;
-    forward = !forward;
-  }
+   int mySpeed =0;
 
-  else {
-    
-    if (thetaX < 0) //go backward toward docking station -> speed = midspeed + change in speed
+//  if (distance <= stopDistance)
+//  {
+//    mySpeed = stopSpeed;
+//    forward = !forward;
+//  }  
+
+    mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
+
+    if (mySpeed < stopSpeed - speedRange) //if the speed is below the expected min speed = stop - range
     {
-      mySpeed =  -(thetaX * speedRange) / horRange; //calculates the speed proprtional to the position of the detection (1048 + range)
-      baseSpeed = midSpeed;
+      mySpeed = stopSpeed - speedRange;
     }
-    else if (thetaX > 0)//go forward away from docking station -> speed = minspeed + change in speed (49 -> 49 + range)
+    else if (mySpeed > stopSpeed + speedRange) //if speed is above the expected max speed spped = stop + range
     {
-      mySpeed =  ((thetaX * speedRange)) / horRange; //calculates the speed proprtional to the position of the detection
-      baseSpeed = minSpeed;
+      mySpeed = stopSpeed + speedRange;
     }
 
-   if (mySpeed <  speedSafety){
-      mySpeed = 0;  //prevent going too low can harm motor
-      baseSpeed = stopSpeed;
-    }else if(mySpeed > 150){
-      mySpeed = 150;
-    }
-    
-  }
-  return mySpeed + baseSpeed;
+    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed;
+    else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
+ 
+  return mySpeed;
 }
 
 /*
@@ -373,49 +300,6 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
   return (distance / 1024.0) * 512 * 2.54;
 }
 
-//void addToArray(float dist)
-//{
-//  for (int k = arrayLength - 1; k > 0; k--)
-//  {
-//    float old = forwardDistances[k - 1];
-//    forwardDistances[k] = old;
-//    //Serial.print(old);
-//  }
-//  forwardDistances[0] = dist;
-//  //Serial.println(forwardDistances[0]);
-//}
-//
-//bool tooClose(float dist, int valid)
-//{
-//  int count = 0;
-//  for (int k = 0; k < arrayLength - 1; k++)
-//  {
-//    if (forwardDistances[k] < dist) count++;
-//  }
-//  //Serial.println(count);
-//  return count >= valid;
-//}
-//
-//float frontAvg()
-//{
-//  int count = 0;
-//  for (int k = 0; k < arrayLength - 1; k++)
-//  {
-//    count += forwardDistances[k];
-//  }
-//  float avg = count / arrayLength;
-//  //Serial.println(avg);
-//  return avg;
-//}
-
-
-/* set motor speed for DShot */
-void setMotorSpeeds(int motorSpeed) {
-  esc1.setThrottle(motorSpeed);
-  esc2.setThrottle(motorSpeed);
-  readAndPrintSerial();  //TODO: This is the telemetry part. WIP
-}
-
 int BitShiftCombine( unsigned char x_high, unsigned char x_low)
 {
   int combined;
@@ -423,79 +307,4 @@ int BitShiftCombine( unsigned char x_high, unsigned char x_low)
   combined = combined << 8;       //shift x_high over to leftmost 8 bits
   combined |= x_low;                 //logical OR keeps x_high intact in combined and fills in                                                             //rightmost 8 bits
   return combined;
-}
-
-void readAndPrintSerial() {
-  if (mySerial1.available()) {
-    //String myInput = mySerial.readBytes(buffer, bufferSize);
-    uint8_t inBuffer1[bufferSize + 1];
-    byte bufIndx1 = 0;
-
-    if (mySerial1.available() > 0) {
-      while (bufIndx1 < bufferSize) {
-        inBuffer1[bufIndx1] = mySerial1.read();
-        bufIndx1 ++;
-      }
-      inBuffer1[bufIndx1] = '\0';
-      mySerial2.listen();
-    }
-    float temp1 = inBuffer1[0];
-    float voltage1 = BitShiftCombine(inBuffer1[1], inBuffer1[2]) / 100.;
-    float current1 = BitShiftCombine(inBuffer1[3], inBuffer1[4]) / 100.;
-    float consumption1 = BitShiftCombine(inBuffer1[5], inBuffer1[6]);
-    float rpm1 = BitShiftCombine(inBuffer1[7], inBuffer1[8]) * 100 / 6;
-    if (consumption1 == 0 && rpm1 > 0 && rpm1 < 1500) {
-      //TODO test with no vision
-      /*Serial.print("Motor 1: ");
-      Serial.print("temp: ");
-      Serial.print(temp1);
-      Serial.print(", voltage: ");
-      Serial.print(voltage1);*/
-      voltage = voltage1;
-      /*Serial.print(", current: ");
-      Serial.print(current1);
-      Serial.print(", consumption: ");
-      Serial.print(consumption1);
-      Serial.print(", RPM: ");
-      Serial.println(rpm1);*/
-    }
-
-  }
-
-  mySerial2.listen();
-  if (mySerial2.available()) {
-    //String myInput = mySerial.readBytes(buffer, bufferSize);
-    uint8_t inBuffer2[bufferSize + 1];
-    byte bufIndx2 = 0;
-
-    if (mySerial2.available() > 0) {
-      while (bufIndx2 < bufferSize) {
-        inBuffer2[bufIndx2] = mySerial2.read();
-        bufIndx2 ++;
-      }
-      inBuffer2[bufIndx2] = '\0';
-      mySerial1.listen();
-    }
-    float temp2 = inBuffer2[0];
-    float voltage2 = BitShiftCombine(inBuffer2[1], inBuffer2[2]) / 100.;
-    float current2 = BitShiftCombine(inBuffer2[3], inBuffer2[4]) / 100.;
-    float consumption2 = BitShiftCombine(inBuffer2[5], inBuffer2[6]);
-    float rpm2 = BitShiftCombine(inBuffer2[7], inBuffer2[8]) * 10;
-    if (consumption2 == 0 && rpm2 > 0 && rpm2 < 1500) {
-      //TODO test with no vision
-
-      /*Serial.print("Motor 2: ");
-      Serial.print("temp: ");
-      Serial.print(temp2);
-      Serial.print(", voltage: ");
-      Serial.print(voltage2);*/
-      voltage = (voltage + voltage2)/2;
-      /*Serial.print(", current: ");
-      Serial.print(current2);
-      Serial.print(", consumption: ");
-      Serial.print(consumption2);
-      Serial.print(", RPM: ");
-      Serial.println(rpm2);*/
-    }
-  }
 }
