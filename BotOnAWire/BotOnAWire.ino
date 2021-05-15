@@ -65,33 +65,32 @@ void setup() {
   strobe.init();
   dirSound.init();
   gimbal.init();
-  strobe.on();
+  
 }
 
 
 void loop() {
-  strobe.flash();
-  dirSound.update();
-  frontDist.push(getUltrasonicDistance(true) +8 ); //front == true// front Dist tends to read high
+  frontDist.push(getUltrasonicDistance(true) + 8 ); //front == true// front Dist tends to read high
   backDist.push( getUltrasonicDistance(false) + 6); //back dist tends to read low
 
-//  if(voltage > 0 && voltage < 9.7){
-//    state = GOHOME;
-//  }
+  //  if(voltage > 0 && voltage < 9.7){
+  //    state = GOHOME;
+  //  }
 
   if (Serial.available() > 0) {
     ////Serial.println("detect\n");
-    
+
     //Serial.print("go ");
     //Serial.println(webcam);
-    
+
     motorSpeed = ReadParseSerial(); // reading input from jetson
-    
+
   }
-  
+
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
     //webcam = !webcam;
     strobe.off();
+    dirSound.off();
     if (frontDist.read() <= stopDistance && backDist.read() <= stopDistance ) {
       //Serial.print("Stopped");
       motorSpeed = stopSpeed;
@@ -110,39 +109,41 @@ void loop() {
       }
     }
     lastInput = millis();
-  }else if (state == GOHOME){
+  } else if (state == GOHOME) {
     strobe.off();
-    if(!backDist.read() >= stopDistance){
+    if (!backDist.read() >= stopDistance) {
       motorSpeed = stopSpeed + patrollingSpeed;
       dir_forward = false;
       lastInput = millis();
-    }else{
-      if(lastInput- millis() < 2000){ // just continue moving towards the docking station for 2 secs untill we have docking station detection
-        motorSpeed = stopSpeed - patrollingSpeed*0.75;
-      }else{
+    } else {
+      if (lastInput - millis() < 2000) { // just continue moving towards the docking station for 2 secs untill we have docking station detection
+        motorSpeed = stopSpeed - patrollingSpeed * 0.75;
+      } else {
         motorSpeed = stopSpeed;
         dir_forward = true;
         state = CHARGING;
         lastInput = millis();
       }
     }
-  }else if (state == CHARGING){
+  } else if (state == CHARGING) {
     strobe.off();
-    if(lastInput - millis() < 10000){// wait 10 seconds after docking since we aren't really charging yet
+    if (lastInput - millis() < 10000) { // wait 10 seconds after docking since we aren't really charging yet
       state = LOOKING;
     }
   }
-  if(state == DETECT){
+  if (state == DETECT) {
     strobe.on();
+    dirSound.on();
   }
-    
+
   //  Serial.println(state);
   //Serial.println(motorSpeed);
-    myESC1.speed(motorSpeed);
-    myESC2.speed(motorSpeed);
+  myESC1.speed(motorSpeed);
+  myESC2.speed(motorSpeed);
 
-  strobe.flash();
-  //dirSound.update();
+  strobe.update();
+  dirSound.update();
+  gimbal.update();
 }
 
 
@@ -238,8 +239,8 @@ double CalcDirection (double x, double y)
   double thetaX = x - centerX;
   double thetaY = y - centerY;
   //angle = Math.atan2(thetaY/thetaX);
-  if(!webcam){
-    thetaX = -1*thetaX;
+  if (!webcam) {
+    thetaX = -1 * thetaX;
   }
   if (thetaX < 0) {
     isFront = false;
@@ -262,30 +263,30 @@ double CalcDirection (double x, double y)
    go forward or backward coresponding to the location of detection with respect to the frame
    Only apply with the setup of one side camera
 */
-int CalcSpeed_demo (float distance, double thetaX) // i think is may be wrong
+int CalcSpeed_demo (float distance, double thetaX) 
 {
-   int mySpeed =0;
+  int mySpeed = 0;
 
-//  if (distance <= stopDistance)
-//  {
-//    mySpeed = stopSpeed;
-//    dir_forward = !dir_forward;
-//  }  
+  //  if (distance <= stopDistance)
+  //  {
+  //    mySpeed = stopSpeed;
+  //    dir_forward = !dir_forward;
+  //  }
 
-    mySpeed = stopSpeed + (thetaX * speedRange)/horRange;
+  mySpeed = stopSpeed + (thetaX * speedRange) / horRange;
 
-    if (mySpeed < stopSpeed - speedRange) //if the speed is below the expected min speed = stop - range
-    {
-      mySpeed = stopSpeed - speedRange;
-    }
-    else if (mySpeed > stopSpeed + speedRange) //if speed is above the expected max speed spped = stop + range
-    {
-      mySpeed = stopSpeed + speedRange;
-    }
+  if (mySpeed < stopSpeed - speedRange) //if the speed is below the expected min speed = stop - range
+  {
+    mySpeed = stopSpeed - speedRange;
+  }
+  else if (mySpeed > stopSpeed + speedRange) //if speed is above the expected max speed spped = stop + range
+  {
+    mySpeed = stopSpeed + speedRange;
+  }
 
-    if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed;
-    else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed;
- 
+  if (mySpeed > stopSpeed - speedSafety && mySpeed < stopSpeed) mySpeed = stopSpeed - speedSafety ;
+  else if (mySpeed < stopSpeed + speedSafety && mySpeed > stopSpeed) mySpeed = stopSpeed + speedSafety;
+
   return mySpeed;
 }
 

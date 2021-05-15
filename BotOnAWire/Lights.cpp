@@ -10,7 +10,7 @@ void Lights::on(){
 void Lights::off(){
     active = false;
 }
-void Lights::flash(){
+void Lights::update(){
     
     if(active){
         digitalWrite(lightsPin, (millis()*frequency/500)%2 == 0);

@@ -11,7 +11,7 @@ class Lights{
         void init();
         void off();
         void on();
-        void flash();
+        void update();
         
 };
 
