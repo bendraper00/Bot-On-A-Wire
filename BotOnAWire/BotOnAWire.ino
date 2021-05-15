@@ -1,8 +1,12 @@
 #include <ESC.h>
 #include <SoftwareSerial.h>
+//#include <ESC.h>
+//#include "DShot.h"
+//#include <Software//Serial.h>
 #include "Lights.h"
 
 #include "DirectionalSound.h"
+#include "Gimbal.h"
 #include "MedianFilter.h"
 
 #define USPin1 A0  //front
@@ -15,6 +19,7 @@ ESC myESC2 (9, 1000, 2000, 2000);
 
 DirectionalSound dirSound;
 Lights strobe;
+Gimbal gimbal;
 
 
 int motorSpeed = 1500;
@@ -29,7 +34,6 @@ double distanceRange = 50;
 bool webcam = true;
 unsigned long lastDetect = 0;
 float forwardDistances[arrayLength];
-bool forward = true;
 bool dir_forward = true;
 
 unsigned int lastInput = 0;
@@ -62,26 +66,28 @@ void setup() {
   pinMode(13, OUTPUT);
   Serial.begin(19200);
   strobe.init();
+  dirSound.init();
+  gimbal.init();
+  strobe.on();
 }
 
 
 void loop() {
-  frontDist.push(getUltrasonicDistance(true) +6 ); //front == true// front Dist tends to read high
-  backDist.push( getUltrasonicDistance(false) + 8); //back dist tends to read low
+  strobe.flash();
+  dirSound.update();
+  frontDist.push(getUltrasonicDistance(true) +8 ); //front == true// front Dist tends to read high
+  backDist.push( getUltrasonicDistance(false) + 6); //back dist tends to read low
 
- /*   Serial.print(frontDist.read());
-   Serial.print(" ");
-    Serial.println(backDist.read());*/
   //addToArray(frontDist);
 //  if(voltage > 0 && voltage < 9.7){
 //    state = GOHOME;
 //  }
 
-  if (Serial.available() > 0) {
-    //Serial.println("detect\n");
+  if (//Serial.available() > 0) {
+    ////Serial.println("detect\n");
     
-    Serial.print("go ");
-    Serial.println(webcam);
+    //Serial.print("go ");
+    //Serial.println(webcam);
     
     motorSpeed = ReadParseSerial(); // reading input from jetson
   }
@@ -96,7 +102,7 @@ void loop() {
       if ( frontDist.read() <= stopDistance ) {
         //if too close
         //Serial.print("BACKWARD");
-        forward = false;
+        dir_forward = false;
       } else if ( backDist.read() <= stopDistance) {
         //Serial.print("FORWARD");
         forward = true;
@@ -118,7 +124,7 @@ void loop() {
         motorSpeed = stopSpeed - patrollingSpeed*0.75;
       }else{
         motorSpeed = stopSpeed;
-        forward = true;
+        dir_forward = true;
         state = CHARGING;
         lastInput = millis();
       }
@@ -246,10 +252,10 @@ double CalcDirection (double x, double y)
     isUp = true;
   }
   if (isFront) {
-    forward = true;
+    dir_forward = true;
     return (CalcSpeed_demo (frontDist.read(), thetaX));
   } else {
-    forward = false;
+    dir_forward = false;
     return (CalcSpeed_demo (backDist.read(), thetaX));
   }
 }
@@ -259,7 +265,7 @@ double CalcDirection (double x, double y)
    go forward or backward coresponding to the location of detection with respect to the frame
    Only apply with the setup of one side camera
 */
-int CalcSpeed_demo (float distance, double thetaX)
+int CalcSpeed_demo (float distance, double thetaX) // i think is may be wrong
 {
    int mySpeed =0;
 

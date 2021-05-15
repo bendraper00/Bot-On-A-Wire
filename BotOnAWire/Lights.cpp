@@ -1,7 +1,5 @@
 #include "Lights.h"
 
-int lastSwitch = 0;
-bool out = true;
 
 void Lights::init(){
     pinMode(lightsPin, OUTPUT);
@@ -15,11 +13,7 @@ void Lights::off(){
 void Lights::flash(){
     
     if(active){
-        if(millis()- lastSwitch > 1000/frequency){
-          out = !out;
-          lastSwitch = millis();
-        }
-        digitalWrite(lightsPin, out);
+        digitalWrite(lightsPin, (millis()*frequency/500)%2 == 0);
     }else{
         digitalWrite(lightsPin, LOW);
     }
