@@ -13,7 +13,7 @@ void Lights::off(){
 void Lights::flash(){
     
     if(active){
-        digitalWrite(lightsPin, (millis()*frequency*2000)%2 == 0);
+        digitalWrite(lightsPin, (millis()*frequency/500)%2 == 0);
     }else{
         digitalWrite(lightsPin, LOW);
     }

@@ -1,5 +1,37 @@
 #include "Gimbal.h"
-
+const char X = 5;
+const char encoderArray[4][4] = {
+                {0,-1,1,X},
+                {1,0,X,-1},
+                {-1,X,0,1},
+                {X,1,-1,0}
+            };
+long yawCount = -1;
+long pitchCount = -1;
+int oldValueP =0;
+int oldValueY =0;
+const int offsetA = 1;
+const int offsetB = 1;
+Motor yawMotor = Motor(AIN1, AIN2, PWMA, offsetA, STBY);
+Motor pitchMotor = Motor(BIN1, BIN2, PWMB, offsetB, STBY);
+double Yangle = 0;
+double Pangle = 0;
+void isrY(){
+  int newValue = (digitalRead(YENCB)<<1) | digitalRead(YENCA);
+  char value = encoderArray[oldValueY][newValue];
+  if(value != X){
+    yawCount+= value;
+  }
+  oldValueY = newValue;
+}
+void isrP(){
+  int newValue = (digitalRead(PENCB)<<1) | digitalRead(PENCA);
+  char value = encoderArray[oldValueP][newValue];
+  if(value != X){
+    pitchCount+= value;
+  }
+  oldValueP = newValue;
+}
 void Gimbal::init(){
     pinMode(YENCA, INPUT);
     pinMode(YENCB, INPUT);
@@ -11,7 +43,7 @@ void Gimbal::init(){
     attachInterrupt(digitalPinToInterrupt(PENCB), isrP, CHANGE);
     pinMode(LIMITPITCH, INPUT_PULLUP);
     pinMode(LIMITYAW, INPUT_PULLUP);
-    this.home();
+    //home(); uncomment when done testing directional sound and lights
 }
 void Gimbal::home(){
     while(digitalRead(LIMITPITCH) != LOW){
@@ -43,7 +75,7 @@ void Gimbal::PIyaw(){
 void Gimbal::PIpitch(){
   const double P = 100, I = 5;
   static double cError = 0;
-  if( Pangle < 0 || Pangle > 90 || digitalRead(LIMITYAW) == LOW)){
+  if( Pangle < 0 || Pangle > 90 || digitalRead(LIMITYAW) == LOW){
     pitchMotor.drive(0);
     return;
   }
@@ -55,8 +87,8 @@ void Gimbal::PIpitch(){
   pitchMotor.drive(constrain(-1*(error*P+cError*I),-255,255));
 }
 void Gimbal::update(){
-    this.PIpitch();
-    this.PIyaw();
+    PIpitch();
+    PIyaw();
     if(digitalRead(LIMITYAW) == LOW){
         yawCount = 0;
     }
@@ -75,21 +107,4 @@ double Gimbal::getYawAngle(){
 }
 double Gimbal::getPitchAngle(){
     return ((double)pitchCount)/PCPR*360;
-}
-
-void isrY(){
-  int newValue = (digitalRead(YENCB)<<1) | digitalRead(YENCA);
-  char value = encoderArray[oldValueY][newValue];
-  if(value != X){
-    yawCount+= value;
-  }
-  oldValueY = newValue;
-}
-void isrP(){
-  int newValue = (digitalRead(PENCB)<<1) | digitalRead(PENCA);
-  char value = encoderArray[oldValueP][newValue];
-  if(value != X){
-    pitchCount+= value;
-  }
-  oldValueP = newValue;
 }

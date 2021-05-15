@@ -4,8 +4,8 @@
 
 class DirectionalSound{
     private:
-        const int PWMOutPin = 11;
-        const int AudioIn = A3;
+        const int PWMOutPin = 5;
+        const int frequency = 1000;
     public:
         void init();
         void update();

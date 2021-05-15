@@ -1,9 +1,10 @@
 //#include <ESC.h>
-#include "DShot.h"
-#include <SoftwareSerial.h>
+//#include "DShot.h"
+//#include <Software//Serial.h>
 #include "Lights.h"
 
 #include "DirectionalSound.h"
+#include "Gimbal.h"
 #include "MedianFilter.h"
 
 #define USPin1 A0  //front
@@ -13,11 +14,11 @@
 //ESC myESC1 (8, 1000, 2000, 2000);
 //ESC myESC2 (9, 1000, 2000, 2000);
 
-DShot esc1;
-DShot esc2;
+//DShot esc1;
+//DShot esc2;
 
-SoftwareSerial mySerial2(4, 5); // RX, TX
-SoftwareSerial mySerial1(2, 3); // RX, TX
+//Software//Serial my//Serial2(4, 5); // RX, TX
+//Software//Serial my//Serial1(2, 3); // RX, TX
 
 const byte telemetryPin1 = 2;
 const byte telemetryPin2 = 2;
@@ -29,7 +30,7 @@ static volatile uint8_t *buffer;
 uint16_t throttle = 0;
 uint16_t target = 0;
 
-void readAndPrintSerial();
+//void readAndPrint//Serial();
 
 typedef struct {
   uint8_t dataAge;
@@ -45,6 +46,7 @@ escSensorData_t escSensorData;
 
 DirectionalSound dirSound;
 Lights strobe;
+Gimbal gimbal;
 
 
 
@@ -63,7 +65,6 @@ Lights strobe;
 bool webcam = true;
 unsigned long lastDetect = 0;
 float forwardDistances[arrayLength];
-bool forward = true;
 bool dir_forward = true;
 
 int minSpeed = 49; 
@@ -95,12 +96,12 @@ RobotState state = LOOKING;
 
 void setup() {
   Serial.begin(115200);
-  mySerial1.begin(115200);
-  mySerial2.begin(115200);
+//  mySerial1.begin(115200);
+//  mySerial2.begin(115200);
 
-  Serial.setTimeout(10000);
-  Serial.println("Hello");
-  Serial.end();
+  //Serial.setTimeout(10000);
+  //Serial.println("Hello");
+  //Serial.end();
 
   //dirSound.init();
   //  myESC1.arm();
@@ -109,36 +110,38 @@ void setup() {
   //  myESC2.speed(1500);
 
   // Notice, all pins must be connected to same PORT
-  esc1.attach(6);
-  esc2.attach(7);
-  pinMode(telemetryPin1, INPUT_PULLUP);
-  pinMode(telemetryPin2, INPUT_PULLUP);
+//  esc1.attach(6);
+//  esc2.attach(7);
+  //pinMode(telemetryPin1, INPUT_PULLUP);
+  //pinMode(telemetryPin2, INPUT_PULLUP);
   setMotorSpeeds(throttle);
   delay(5000);
 
   pinMode(13, OUTPUT);
   Serial.begin(19200);
   strobe.init();
+  dirSound.init();
+  gimbal.init();
+  strobe.on();
 }
 
 
 void loop() {
-  frontDist.push(getUltrasonicDistance(true) +6 ); //front == true// front Dist tends to read high
+  strobe.flash();
+  dirSound.update();
+  /*frontDist.push(getUltrasonicDistance(true) +6 ); //front == true// front Dist tends to read high
   backDist.push( getUltrasonicDistance(false) + 8); //back dist tends to read low
 
- /*   Serial.print(frontDist.read());
-   Serial.print(" ");
-    Serial.println(backDist.read());*/
   //addToArray(frontDist);
   if(voltage > 0 && voltage < 9.7){
     state = GOHOME;
   }
 
-  if (Serial.available() > 0) {
-    //Serial.println("detect\n");
+  if (//Serial.available() > 0) {
+    ////Serial.println("detect\n");
     
-    Serial.print("go ");
-    Serial.println(webcam);
+    //Serial.print("go ");
+    //Serial.println(webcam);
     
     motorSpeed = ReadParseSerial(); // reading input from jetson
   }
@@ -153,13 +156,13 @@ void loop() {
       if ( frontDist.read() <= stopDistance ) {
         //if too close
         //Serial.print("BACKWARD");
-        forward = false;
+        dir_forward = false;
       } else if ( backDist.read() <= stopDistance) {
         //Serial.print("FORWARD");
-        forward = true;
-      } if (forward) {
+        dir_forward = true;
+      } if (dir_forward) {
         motorSpeed = minSpeed + patrollingSpeed;
-      } else if (!forward) {
+      } else if (!dir_forward) {
         motorSpeed = midSpeed + patrollingSpeed;
       }
     }
@@ -168,14 +171,14 @@ void loop() {
     strobe.off();
     if(!backDist.read() >= stopDistance){
       motorSpeed = midSpeed + patrollingSpeed;
-      forward = false;
+      dir_forward = false;
       lastInput = millis();
     }else{
       if(lastInput- millis() < 2000){ // just continue moving towards the docking station for 2 secs untill we have docking station detection
         motorSpeed = midSpeed + patrollingSpeed*0.75;
       }else{
         motorSpeed = stopSpeed;
-        forward = true;
+        dir_forward = true;
         state = CHARGING;
         lastInput = millis();
       }
@@ -206,7 +209,7 @@ void loop() {
 
 
 
-  //dirSound.update();
+  //dirSound.update();*/
 }
 
 
@@ -313,10 +316,10 @@ double CalcDirection (double x, double y)
     isUp = true;
   }
   if (isFront) {
-    forward = true;
+    dir_forward = true;
     return (CalcSpeed_demo (frontDist.read(), thetaX));
   } else {
-    forward = false;
+    dir_forward = false;
     return (CalcSpeed_demo (backDist.read(), thetaX));
   }
 }
@@ -332,7 +335,7 @@ int CalcSpeed_demo (float distance, double thetaX)
   int baseSpeed = 0;
   if (distance <= stopDistance ) {
     mySpeed = stopSpeed;
-    forward = !forward;
+    dir_forward = !dir_forward;
   }
 
   else {
@@ -411,9 +414,9 @@ float getUltrasonicDistance(bool isFront) // returns distance in centimeters
 
 /* set motor speed for DShot */
 void setMotorSpeeds(int motorSpeed) {
-  esc1.setThrottle(motorSpeed);
-  esc2.setThrottle(motorSpeed);
-  readAndPrintSerial();  //TODO: This is the telemetry part. WIP
+//  esc1.setThrottle(motorSpeed);
+//  esc2.setThrottle(motorSpeed);
+//  readAndPrintSerial();  //TODO: This is the telemetry part. WIP
 }
 
 int BitShiftCombine( unsigned char x_high, unsigned char x_low)
@@ -424,7 +427,7 @@ int BitShiftCombine( unsigned char x_high, unsigned char x_low)
   combined |= x_low;                 //logical OR keeps x_high intact in combined and fills in                                                             //rightmost 8 bits
   return combined;
 }
-
+/*
 void readAndPrintSerial() {
   if (mySerial1.available()) {
     //String myInput = mySerial.readBytes(buffer, bufferSize);
@@ -446,18 +449,18 @@ void readAndPrintSerial() {
     float rpm1 = BitShiftCombine(inBuffer1[7], inBuffer1[8]) * 100 / 6;
     if (consumption1 == 0 && rpm1 > 0 && rpm1 < 1500) {
       //TODO test with no vision
-      /*Serial.print("Motor 1: ");
+      Serial.print("Motor 1: ");
       Serial.print("temp: ");
       Serial.print(temp1);
       Serial.print(", voltage: ");
-      Serial.print(voltage1);*/
+      Serial.print(voltage1);
       voltage = voltage1;
-      /*Serial.print(", current: ");
+      Serial.print(", current: ");
       Serial.print(current1);
       Serial.print(", consumption: ");
       Serial.print(consumption1);
       Serial.print(", RPM: ");
-      Serial.println(rpm1);*/
+      Serial.println(rpm1);
     }
 
   }
@@ -484,18 +487,18 @@ void readAndPrintSerial() {
     if (consumption2 == 0 && rpm2 > 0 && rpm2 < 1500) {
       //TODO test with no vision
 
-      /*Serial.print("Motor 2: ");
+      Serial.print("Motor 2: ");
       Serial.print("temp: ");
       Serial.print(temp2);
       Serial.print(", voltage: ");
-      Serial.print(voltage2);*/
+      Serial.print(voltage2);
       voltage = (voltage + voltage2)/2;
-      /*Serial.print(", current: ");
+      Serial.print(", current: ");
       Serial.print(current2);
       Serial.print(", consumption: ");
       Serial.print(consumption2);
       Serial.print(", RPM: ");
-      Serial.println(rpm2);*/
+      Serial.println(rpm2);
     }
   }
-}
+}*/

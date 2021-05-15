@@ -4,7 +4,7 @@
 
 class Lights{
     private:
-        const int lightsPin = 11;
+        const int lightsPin = 22;
         bool active = false;
         const int frequency = 10; // in Hz
     public:
