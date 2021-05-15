@@ -1,10 +1,6 @@
 #include <ESC.h>
 #include <SoftwareSerial.h>
-//#include <ESC.h>
-//#include "DShot.h"
-//#include <Software//Serial.h>
 #include "Lights.h"
-
 #include "DirectionalSound.h"
 #include "Gimbal.h"
 #include "MedianFilter.h"
@@ -21,6 +17,8 @@ DirectionalSound dirSound;
 Lights strobe;
 Gimbal gimbal;
 
+float getUltrasonicDistance(bool isFront) ;
+int ReadParseSerial();
 
 int motorSpeed = 1500;
 int stopSpeed = 1500;
@@ -63,7 +61,6 @@ void setup() {
   myESC2.speed(1500);
   delay(5000);
 
-  pinMode(13, OUTPUT);
   Serial.begin(19200);
   strobe.init();
   dirSound.init();
@@ -78,18 +75,18 @@ void loop() {
   frontDist.push(getUltrasonicDistance(true) +8 ); //front == true// front Dist tends to read high
   backDist.push( getUltrasonicDistance(false) + 6); //back dist tends to read low
 
-  //addToArray(frontDist);
 //  if(voltage > 0 && voltage < 9.7){
 //    state = GOHOME;
 //  }
 
-  if (//Serial.available() > 0) {
+  if (Serial.available() > 0) {
     ////Serial.println("detect\n");
     
     //Serial.print("go ");
     //Serial.println(webcam);
     
     motorSpeed = ReadParseSerial(); // reading input from jetson
+    
   }
   
   if (state == LOOKING && millis() - lastDetect > 1000) { // if not currently chasing
@@ -105,10 +102,10 @@ void loop() {
         dir_forward = false;
       } else if ( backDist.read() <= stopDistance) {
         //Serial.print("FORWARD");
-        forward = true;
-      } if (forward) {
+        dir_forward = true;
+      } if (dir_forward) {
         motorSpeed = stopSpeed + patrollingSpeed;
-      } else if (!forward) {
+      } else if (!dir_forward) {
         motorSpeed = stopSpeed - patrollingSpeed;
       }
     }
@@ -117,7 +114,7 @@ void loop() {
     strobe.off();
     if(!backDist.read() >= stopDistance){
       motorSpeed = stopSpeed + patrollingSpeed;
-      forward = false;
+      dir_forward = false;
       lastInput = millis();
     }else{
       if(lastInput- millis() < 2000){ // just continue moving towards the docking station for 2 secs untill we have docking station detection
@@ -272,7 +269,7 @@ int CalcSpeed_demo (float distance, double thetaX) // i think is may be wrong
 //  if (distance <= stopDistance)
 //  {
 //    mySpeed = stopSpeed;
-//    forward = !forward;
+//    dir_forward = !dir_forward;
 //  }  
 
     mySpeed = stopSpeed + (thetaX * speedRange)/horRange;

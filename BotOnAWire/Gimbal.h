@@ -9,13 +9,13 @@
 #define PENCB 19
 #define LIMITPITCH 11
 #define LIMITYAW 4
-#define AIN1 13
-#define BIN1 8
-#define AIN2 6
-#define BIN2 9
-#define PWMA 30
-#define PWMB 10
-#define STBY 12
+#define AIN1 12
+#define BIN1 14
+#define AIN2 13
+#define BIN2 15
+#define PWMA 6
+#define PWMB 7
+#define STBY 16
 #define YCPR 1080 //yaw encoder counts per revolution (of end effector)
 #define PCPR 17310 //very back of the envolope pitch encoder counts per revolution (of end effector)
     class Gimbal{
